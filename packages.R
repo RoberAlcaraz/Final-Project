@@ -1,4 +1,6 @@
-# install.packages("pacman")
+install.packages("pacman")
 pacman::p_load(reticulate)
 py_install("dash")
 py_install("dash-bootstrap-components")
+py_install("pandas")
+py_install("plotly.express")
