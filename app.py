@@ -41,7 +41,7 @@ SIDEBAR_STYLE = {
 
 # padding for the page content
 CONTENT_STYLE = {
-    "margin-left": "18rem",
+    "margin-left": "24rem",
     "margin-right": "2rem",
     "padding": "2rem 1rem",
 }
@@ -86,13 +86,15 @@ app.layout = html.Div([
 def render_page_content(pathname):
     if pathname == "/":
         return [
-                html.H1('Introduction',
-                        style={'textAlign':'center'})
+                html.H1('Introduction', style={'textAlign':'center'}),
+                html.P('Craigslist is the world’s largest collection of used vehicles for sale.'
+                'This data set includes every used vehicle entry within the United States on'
+                'Craiglist, from the year 1900 until today. This data set has been taken'
+                'from the website')
                 ]
     elif pathname == "/page-1":
         return [
-                html.H1('Data 1',
-                        style={'textAlign':'center'})
+                html.H1('Data 1', style={'textAlign':'center'})
                 ]
     elif pathname == "/page-2":
         return [
