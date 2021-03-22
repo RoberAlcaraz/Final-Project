@@ -14,15 +14,27 @@ import json
 
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-df1 = pd.read_csv('https://raw.githubusercontent.com/RoberAlcaraz/First-Take-Away/main/vehicles_data.csv')
 
+# Vehicles data set
+df1 = pd.read_csv('https://raw.githubusercontent.com/RoberAlcaraz/First-Take-Away/main/vehicles_data.csv')
+df1["price"] = df1["price"].astype("category")
+df1["manufacturer"] = df1["manufacturer"].astype("category")
+df1["condition"] = df1["condition"].astype("category")
+df1["fuel"] = df1["fuel"].astype("category")
+df1["title_status"] = df1["title_status"].astype("category")
+df1["transmission"] = df1["transmission"].astype("category")
+df1["drive"] = df1["drive"].astype("category")
+df1 = df1.drop(columns=['state', 'lat', 'long'])
+
+
+###############################################################################
 # styling the sidebar
 SIDEBAR_STYLE = {
     "position": "fixed",
     "top": 0,
     "left": 0,
     "bottom": 0,
-    "width": "20rem",
+    "width": "22rem",
     "padding": "2rem 1rem",
     "background-color": "#f8f9fa",
 }
