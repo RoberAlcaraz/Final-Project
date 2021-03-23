@@ -26,6 +26,17 @@ df1["transmission"] = df1["transmission"].astype("category")
 df1["drive"] = df1["drive"].astype("category")
 df1 = df1.drop(columns=['state', 'lat', 'long'])
 
+# Bank Churnes Data Set
+
+df2 = pd.read_csv('https://raw.githubusercontent.com/amaliajimenezajt/final_shiny_app/master/BankChurnersData.csv')
+df2["Attrition_Flag"] = df2["Attrition_Flag"].astype("category")
+df2["Gender"] = df2["Gender"].astype("category")
+df2["Education_Level"] = df2["Education_Level"].astype("category")
+df2["Education_Level"] = df2["Education_Level"].astype("category")
+df2["Card_Category"] = df2["Card_Category"].astype("category")
+df2["Income_Category_final"] = df2["Income_Category_final"].astype("category")
+
+
 
 ###############################################################################
 # styling the sidebar
