@@ -15,7 +15,9 @@ import json
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-## Vehicles data set
+
+# Vehicles data set
+
 df1 = pd.read_csv('https://raw.githubusercontent.com/RoberAlcaraz/First-Take-Away/main/vehicles_data.csv')
 df1["price"] = df1["price"].astype("category")
 df1["manufacturer"] = df1["manufacturer"].astype("category")
@@ -26,6 +28,7 @@ df1["transmission"] = df1["transmission"].astype("category")
 df1["drive"] = df1["drive"].astype("category")
 df1 = df1.drop(columns=['state', 'lat', 'long'])
 
+
 ## Bank Churnes Data Set
 
 df2 = pd.read_csv('https://raw.githubusercontent.com/amaliajimenezajt/final_shiny_app/master/BankChurnersData.csv')
@@ -35,7 +38,6 @@ df2["Education_Level"] = df2["Education_Level"].astype("category")
 df2["Education_Level"] = df2["Education_Level"].astype("category")
 df2["Card_Category"] = df2["Card_Category"].astype("category")
 df2["Income_Category_final"] = df2["Income_Category_final"].astype("category")
-
 
 
 ###############################################################################
@@ -73,7 +75,7 @@ sidebar = html.Div(
                 dbc.NavLink("Vehicles: Data description", href="/page-1", active="exact"),
                 dbc.NavLink("Vehicles: Descriptive analysis", href="/page-2", active="exact"),
                 dbc.NavLink("Vehicles: Statistical models", href="/page-3", active="exact"),
-                dbc.NavLink("Bank Churners: Data description", href="/page-4", active="exact"),
+                 dbc.NavLink("Bank Churners: Data description", href="/page-4", active="exact"),
                  dbc.NavLink("Bank Churners: Variables Plots", href="/page-5", active="exact"),
             ],
             vertical=True,
