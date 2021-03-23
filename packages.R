@@ -1,0 +1,10 @@
+# install.packages("pacman")
+pacman::p_load(reticulate)
+py_install("dash")
+py_install("dash-bootstrap-components")
+py_install("dash-core-components")
+py_install("dash-table")
+py_install("pandas")
+py_install("json")
+py_install("plotly")
+
