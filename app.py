@@ -48,8 +48,10 @@ CONTENT_STYLE = {
 
 sidebar = html.Div(
     [
-        html.H2("Final Project", className="display-4"),
-        html.H4("Data Tidying and reporting", className="display-6"),
+        html.H2("Final Project"),
+        html.H4("Data Tidying and reporting"),
+        html.Hr(),
+        html.H6("Amalia Jiménez Toledano and Roberto Jesús Alcaraz Molina"),
         html.Hr(),
         html.P(
             "We are going to analyze two different data sets", className="lead"
@@ -57,8 +59,10 @@ sidebar = html.Div(
         dbc.Nav(
             [
                 dbc.NavLink("Introduction", href="/", active="exact"),
-                dbc.NavLink("Data 1", href="/page-1", active="exact"),
-                dbc.NavLink("Data 2", href="/page-2", active="exact"),
+                dbc.NavLink("Vehicles: Data description", href="/page-1", active="exact"),
+                dbc.NavLink("Vehicles: Descriptive analysis", href="/page-2", active="exact"),
+                dbc.NavLink("Vehicles: Statistical models", href="/page-3", active="exact"),
+                dbc.NavLink("Data 2", href="/page-4", active="exact"),
             ],
             vertical=True,
             pills=True,
@@ -79,6 +83,15 @@ app.layout = html.Div([
 
 ###################################################################
 # CALLBACK
+
+# introPage = [
+#     html.H1('Introduction', style={'textAlign':'center'}),
+#     html.P('Craigslist is the world’s largest collection of used vehicles for sale.'
+#     'This data set includes every used vehicle entry within the United States on'
+#     'Craiglist, from the year 1900 until today. This data set has been taken'
+#     'from the website')
+#     ]
+    
 @app.callback(
     Output("page-content", "children"),
     [Input("url", "pathname")]
@@ -92,9 +105,27 @@ def render_page_content(pathname):
                 'Craiglist, from the year 1900 until today. This data set has been taken'
                 'from the website')
                 ]
+                
     elif pathname == "/page-1":
         return [
-                html.H1('Data 1', style={'textAlign':'center'})
+                html.H1('Data description', style={'textAlign':'center'}),
+                html.Div(["Input: ",
+                          dcc.Input(id='my-input', value='initial value', type='text')]),
+                html.Br(),
+                html.Div(id='my-output'),
+                dcc.Dropdown(
+                    id='my-vars',
+                    options=[{'label': i, 'value': i} for i in df1.columns],
+                    value=list(df1.columns.values)[0]
+                    ),
+                html.Br(),
+                html.Div(id='my-div'),
+                html.Br(),
+                dash_table.DataTable(
+                    id='table',
+                    columns=[{"name": i, "id": i} for i in df1.columns],
+                    data=df1.to_dict('records'),
+                )
                 ]
     elif pathname == "/page-2":
         return [
@@ -109,7 +140,22 @@ def render_page_content(pathname):
             html.P(f"The pathname {pathname} was not recognised..."),
         ]
     )
+    
+@app.callback(
+    Output(component_id='my-output', component_property='children'),
+    Input(component_id='my-input', component_property='value')
+)
+def update_output_div(input_value):
+    return 'Output: {}'.format(input_value)
 
+# @app.callback(
+#     Output('my-div', 'info'),
+#     Input('my-vars', 'value')
+# )
+# def info_var(input_var):
+#     filtered_df = df1[input_var]
+#     df = pd.DataFrame(filtered_df)
+#     return df.describe()
 
 if __name__=='__main__':
     app.run_server()
