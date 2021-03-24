@@ -27,6 +27,9 @@ df1["transmission"] = df1["transmission"].astype("category")
 df1["drive"] = df1["drive"].astype("category")
 df1 = df1.drop(columns=['state', 'lat', 'long'])
 
+df1_cont = df1[['year', 'odometer']]
+df1_cat = df1[['price', 'manufacturer', 'condition', 'fuel', 'title_status', 'transmission', 'drive']]
+
 
 ## Bank Churnes Data Set
 
@@ -98,14 +101,6 @@ app.layout = html.Div([
 
 ###################################################################
 # CALLBACK
-
-# introPage = [
-#     html.H1('Introduction', style={'textAlign':'center'}),
-#     html.P('Craigslist is the world’s largest collection of used vehicles for sale.'
-#     'This data set includes every used vehicle entry within the United States on'
-#     'Craiglist, from the year 1900 until today. This data set has been taken'
-#     'from the website')
-#     ]
     
 @app.callback(
     Output("page-content", "children"),
@@ -122,58 +117,71 @@ def render_page_content(pathname):
                 html.P('A bank manager is interested in predicting the annual income of his or her clients account holder.'
                 'For the new year, the bank has decided to create a new service depending on this income,'
                 'so that it will be able to know which customers have good income in order to give'
-                'them a better service and make them commit to stay with the bank.'                
-)
+                'them a better service and make them commit to stay with the bank.')
                 ]
 
     elif pathname == "/page-1":
         return [
-                html.H1('Data description', style={'textAlign':'center'}),
-                html.Div(["Input: ",
-                          dcc.Input(id='my-input', value='initial value', type='text')]),
-                html.Br(),
-                html.Div(id='my-output'),
-                dcc.Dropdown(
-                    id='my-vars',
-                    options=[{'label': i, 'value': i} for i in df1.columns],
-                    value=list(df1.columns.values)[0]
-                    ),
-                html.Br(),
-                html.Div(id='my-div'),
-                html.Br(),
-                dt.DataTable(
-                    id='table',
-                    columns=[{"name": i, "id": i} for i in df1.columns],
-                    data=df1.to_dict('records'),
-                )
+        html.H1('Data description', style={'textAlign':'center'}),
+        html.Br(),
+        dcc.Dropdown(
+            id='my-vars',
+            options=[{'label': i, 'value': i} for i in df1.columns],
+            value=list(df1.columns.values)[0]
+            ),
+        html.Br(),
+        html.Div(id='my-div'),
+        html.Br(),
+        dt.DataTable(
+            id='table',
+            columns=[{"name": i, "id": i} for i in df1.columns],
+            data=df1.to_dict('records'),
+        )
                 ]
+    elif pathname == "/page-2":
+        return [
+        html.H1('Descriptive analysis'),
+        dcc.Dropdown(
+            id='cont-vars',
+            options=[{'label': i, 'value': i} for i in df1_cont.columns]
+            ),
+        dcc.Graph(id='hist'),
+        dcc.Dropdown(
+            id='cat-vars',
+            options=[{'label': i, 'value': i} for i in df1_cat.columns]
+            ),
+        dcc.Graph(id='bar')
+        ]
+    elif pathname == "/page-3":
+        return []
     elif pathname == "/page-4":
         return [
                 html.H1('Data Description-Summary',
                         style={'textAlign':'center'}),
-                html.Div([
-        dt.DataTable(
-        id='datatable-interactivity',
-        columns=[
-            {"name": i, "id": i, "deletable": True, "selectable": True} for i in df2.columns
-        ],
-        data=df2.to_dict('records'),
-        editable=True,
-        filter_action="native",
-        sort_action="native",
-        sort_mode="multi",
-        column_selectable="single",
-        row_selectable="multi",
-        row_deletable=True,
-        selected_columns=[],
-        selected_rows=[],
-        page_action="native",
-        page_current= 0,
-        page_size= 10,
-    ),
-    html.Div(id='datatable-interactivity-container')
-])
+                html.Div(
+                    [dt.DataTable(
+                        id='datatable-interactivity',
+                        columns=[
+                            {"name": i, "id": i, "deletable": True, "selectable": True} for i in df2.columns
+                            ],
+                            data=df2.to_dict('records'),
+                            editable=True,
+                            filter_action="native",
+                            sort_action="native",
+                            sort_mode="multi",
+                            column_selectable="single",
+                            row_selectable="multi",
+                            row_deletable=True,
+                            selected_columns=[],
+                            selected_rows=[],
+                            page_action="native",
+                            page_current= 0,
+                            page_size= 10,
+                            ),
+                html.Div(id='datatable-interactivity-container')
+                ])
                 ]
+    
     # If the user tries to reach a different page, return a 404 message
     return dbc.Jumbotron(
         [
@@ -184,11 +192,18 @@ def render_page_content(pathname):
     )
     
 @app.callback(
-    Output(component_id='my-output', component_property='children'),
-    Input(component_id='my-input', component_property='value')
-)
-def update_output_div(input_value):
-    return 'Output: {}'.format(input_value)
+    Output('hist', 'figure'),
+    Input('cont-vars', 'value'))
+def update_hist(selected_var):
+    fig = px.histogram(df1, x=selected_var)
+    return fig
+
+@app.callback(
+    Output('bar', 'figure'),
+    Input('cat-vars', 'value'))
+def update_bar(selected_var):
+    fig = px.bar(df1, x=selected_var, color='price')
+    return fig
 
 
 ### table df2
