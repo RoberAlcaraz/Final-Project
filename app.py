@@ -135,7 +135,7 @@ def render_page_content(pathname):
                 html.Br(),
                 html.Div(id='my-div'),
                 html.Br(),
-                dash_table.DataTable(
+                dt.DataTable(
                     id='table',
                     columns=[{"name": i, "id": i} for i in df1.columns],
                     data=df1.to_dict('records'),
@@ -173,3 +173,6 @@ def update_output_div(input_value):
 
 if __name__=='__main__':
     app.run_server()
+
+
+
