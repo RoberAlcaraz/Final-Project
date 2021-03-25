@@ -183,7 +183,15 @@ def render_page_content(pathname):
                 ]
     elif pathname == "/page-5":
         return [
-        html.P("x-axis:"),
+        html.H1('Plot numerical vs categorical',
+        style={'textAlign':'center'}),
+        html.P('In the following graph, you can select the numerical variable according to' 
+        'the most relevant categorical variables. Moreover, as the response variable in this case' 
+        'is income, it is important to have this reference as well:',
+        style={'textAlign':'center',
+        'color':'green'}),
+        html.P("Numerical Variable:",
+        style={'color':'red'}),
         dcc.RadioItems(
         id='x-axis', 
         options=[{'value': x, 'label': x} 
@@ -191,7 +199,8 @@ def render_page_content(pathname):
         value=['Education_Level'], 
         labelStyle={'display': 'inline-block'}
         ),
-        html.P("y-axis:"),
+        html.P("Categorical Variable:",
+        style={'color':'blue'}),
     dcc.RadioItems(
         id='y-axis', 
         options=[{'value': x, 'label': x} 
