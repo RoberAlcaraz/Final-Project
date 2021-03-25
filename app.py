@@ -81,6 +81,7 @@ sidebar = html.Div(
                 dbc.NavLink("Vehicles: Statistical models", href="/page-3", active="exact"),
                  dbc.NavLink("Bank Churners: Data description", href="/page-4", active="exact"),
                  dbc.NavLink("Bank Churners: Variables Plots", href="/page-5", active="exact"),
+                 dbc.NavLink("Bank Churners: Regression Plot-Summary", href="/page-6", active="exact")
             ],
             vertical=True,
             pills=True,
@@ -190,7 +191,7 @@ def render_page_content(pathname):
         'is income, it is important to have this reference as well:',
         style={'textAlign':'center',
         'color':'green'}),
-        html.P("Numerical Variable:",
+        html.P("Categorical Variable:",
         style={'color':'red'}),
         dcc.RadioItems(
         id='x-axis', 
@@ -199,7 +200,7 @@ def render_page_content(pathname):
         value=['Education_Level'], 
         labelStyle={'display': 'inline-block'}
         ),
-        html.P("Categorical Variable:",
+        html.P("Numerical Variable:",
         style={'color':'blue'}),
     dcc.RadioItems(
         id='y-axis', 
@@ -210,6 +211,27 @@ def render_page_content(pathname):
     ),
     dcc.Graph(id="box-plot")
     ]
+    
+    elif pathname == "/page-6":
+        return [
+        html.P("Categorical Variable:",
+        style={'color':'red'}),
+        dcc.RadioItems(
+        id='x-linear', 
+        options=[{'value': x, 'label': x} 
+                 for x in ['Customer_Age', 'Total_Revolving_Bal', 'Total_Trans_Amt', 'Total_Trans_Ct']],
+        value=['Customer_Age'], 
+        labelStyle={'display': 'inline-block'}),
+        dcc.RadioItems(
+        id='y-linear', 
+        options=[{'value': x, 'label': x} 
+                 for x in ['Customer_Age', 'Total_Revolving_Bal', 'Total_Trans_Amt', 'Total_Trans_Ct']],
+        value='Total_Trans_Ct', 
+        labelStyle={'display': 'inline-block'}),
+        
+        dcc.Graph(id="linear")
+        
+        ]
         
     
     
@@ -307,6 +329,26 @@ def generate_chart(x, y):
     title="Box plot of Numerical Variables",
     notched=True)
     return fig
+
+######### linear regression
+@app.callback(
+    Output("linear", "figure"), 
+    [Input("x-linear", "value"),
+    Input("y-linear", "value")])
+def generate_linear(x,y):
+    fig = px.scatter(df2, x=x, y=y, facet_col="Attrition_Flag", color="Income_Category_final", trendline="ols")
+    results = px.get_trendline_results(fig)
+    return fig
+    print(results)
+    results.query("sex == 'Male' and smoker == 'Yes'").px_fit_results.iloc[0].summary()
+
+
+    
+
+
+
+
+
 
 
 
