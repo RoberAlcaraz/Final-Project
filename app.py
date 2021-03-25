@@ -181,6 +181,28 @@ def render_page_content(pathname):
                 html.Div(id='datatable-interactivity-container')
                 ])
                 ]
+    elif pathname == "/page-5":
+        return [
+        html.P("x-axis:"),
+        dcc.RadioItems(
+        id='x-axis', 
+        options=[{'value': x, 'label': x} 
+                 for x in ['Attrition_Flag', 'Education_Level',  'Card_Category']],
+        value=['Education_Level'], 
+        labelStyle={'display': 'inline-block'}
+        ),
+        html.P("y-axis:"),
+    dcc.RadioItems(
+        id='y-axis', 
+        options=[{'value': x, 'label': x} 
+                 for x in ['Customer_Age', 'Total_Revolving_Bal', 'Total_Trans_Amt', 'Total_Trans_Ct']],
+        value='Total_Trans_Ct', 
+        labelStyle={'display': 'inline-block'}
+    ),
+    dcc.Graph(id="box-plot")
+    ]
+        
+    
     
     # If the user tries to reach a different page, return a 404 message
     return dbc.Jumbotron(
@@ -265,6 +287,17 @@ def update_graphs(rows, derived_virtual_selected_rows):
 
 
 
+######## box-plot
+
+@app.callback(
+    Output("box-plot", "figure"), 
+    [Input("x-axis", "value"), 
+     Input("y-axis", "value")])
+def generate_chart(x, y):
+    fig = px.box(df2, x=x, y=y,color='Income_Category_final',
+    title="Box plot of Numerical Variables",
+    notched=True)
+    return fig
 
 
 
