@@ -134,34 +134,19 @@ def render_page_content(pathname):
             ],
             data=df1.to_dict('records'),
             filter_action="native",
-            sort_action="native"
+            sort_action="native",
+            page_size= 10
         ),
         html.Div(id='datatable-interactivity-container1')
                 ]
     elif pathname == "/page-2":
         return [
         html.H1('Descriptive analysis'),
-        dcc.Dropdown(
-            id='cont-vars',
-            options=[{'label': i, 'value': i} for i in df1_cont.columns],
-            placeholder="Select a continuous variable: ",
-            ),
-        dcc.RangeSlider(
-            id = 'my-range-slider',
-            min = minimum,
-            max = maximum,
-            step=step,
-            allowCross=False
-        ),
-        dcc.Graph(id='hist'),
-        dcc.Dropdown(
-            id='cat-vars',
-            options=[{'label': i, 'value': i} for i in df1_cat.columns],
-            value=[{'label': i, 'value': i} for i in df1_cat.columns][0],
-            placeholder="Select a categorical variable: ",
-            multi=True
-            ),
-        dcc.Graph(id='bar')
+        dcc.Tabs(id = "tabs", value = "tab-cont", children=[
+            dcc.Tab(label = "Continuous variables", value="tab-cont"),
+            dcc.Tab(label = "Categorical variables", value="tab-cat")
+        ]),
+        html.Div(id = "tabs-content")
         ]
         
         
@@ -266,54 +251,50 @@ def update_styles(selected_columns1):
         'if': { 'column_id': i },
         'background_color': '#D2F3FF'
     } for i in selected_columns1]
-# 
-#  @app.callback(
-#      [Output(component_id='my-range-slider', component_property='min'),
-#       Output(component_id='my-range-slider', component_property='max'),
-#       Output(component_id='my-range-slider', component_property='step')],
-#      [Input(component_id='cont-vars', component_property='value')])    
- # def update_slider(selection):
- #     if selection == 'year':
- #         minimum = min(df1['year'])
- #         maximum = max(df1['year'])
- #         step = 1000
- #     elif selection == 'odometer':
- #         minimum = min(df1['odometer'])
- #         maximum = max(df1['odometer'])
- #         step = 10000
- #     return minimum, maximum, step 
+
+barTab = html.Div([
+    dcc.Dropdown(
+        id='cat-vars',
+        options=[{'label': i, 'value': i} for i in df1_cat.columns],
+        value=[{'label': i, 'value': i} for i in df1_cat.columns][0],
+        placeholder="Select a categorical variable: ",
+        multi=True
+        ),
+    dcc.Graph(id='bar')
+])
+    
+conTab = html.Div([
+    dcc.Dropdown(
+        id='cont-vars',
+        options=[{'label': i, 'value': i} for i in df1_cont.columns],
+        placeholder="Select a continuous variable: ",
+        ),
+    dcc.Graph(id='hist')
+])
+
+@app.callback(
+    Output('tabs-content', 'children'),
+    Input('tabs', 'value'))
+def update_tab(selected_tab):
+    if selected_tab == 'tab-cat':
+        return barTab
+    return conTab
+     
  
- # @app.callback(
- #     Output('hist', 'figure'),
- #     [Input('my-range-slider', 'min'),
- #     Input('my-range-slider', 'max'),
- #     Input('my-range-slider', 'step')])
- # def update_hist(selected_var):
- #     newdf = df1[(df1[selected_var] > minimum) && (df1[selected_var] < maximum)]
- #     fig = px.histogram(newdf, x=selected_var)
- #     return fig
-
-# @app.callback(
-#      Output('hist', 'figure'),
-#      Input('cont-vars', 'value'))
-#  def update_hist(selected_var):
-#      fig = px.histogram(df1, x=selected_var)
-#      return fig
-
+@app.callback(
+    Output('hist', 'figure'),
+    Input('cont-vars', 'value'))
+def update_hist(selected_var):
+    fig = px.histogram(df1, x=selected_var)
+    return fig
+     
 
 @app.callback(
     Output('bar', 'figure'),
     Input('cat-vars', 'value'))
-    
-def update_bare(selected_var):
-    return[{
-    'if': { 'column_id': i },
-        'background_color': '#D2F3FF'
-    }for i in selected_var]
-    # fig = px.bar(df1, x=selected_var, color='price')
-    # return fig
-
-# 
+def update_bar(selected_var):
+    fig = px.bar(df1, x=selected_var, color='price')
+    return fig
 
 
 ### table df2
