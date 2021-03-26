@@ -179,6 +179,7 @@ def render_page_content(pathname):
                     ],
                     data=df2.to_dict('records'),
                     editable=True,
+                    page_size= 10,
                     filter_action="native",
                     sort_action="native",
                     )
@@ -213,7 +214,15 @@ def render_page_content(pathname):
         value='Total_Trans_Ct', 
         labelStyle={'display': 'inline-block'}
     ),
-    dcc.Graph(id="box-plot")
+     html.P("Filter by the year of Customer:"),
+    dcc.RangeSlider(
+        id='yearslider',
+        min=30, max=80, step=1,
+        marks={30: '30', 80: '80'},
+        value=[30, 80]
+    ),
+    dcc.Graph(id="box-plot"),
+    html.Div(id='output-container', style={'margin-top': 20})
     ]
     
     elif pathname == "/page-6":
@@ -371,12 +380,26 @@ def update_graphs(rows, derived_virtual_selected_rows):
 @app.callback(
     Output("box-plot", "figure"), 
     [Input("x-axis", "value"), 
-     Input("y-axis", "value")])
-def generate_chart(x, y):
-    fig = px.box(df2, x=x, y=y,color='Income_Category_final',
+     Input("y-axis", "value")],
+     [Input("yearslider", "value")])
+     
+def generate_chart(x, y,year_slider):
+    yearlow, yearhigh = year_slider
+    filteryear = (df2['Customer_Age'] > yearlow) & (df2['Customer_Age'] < yearhigh)
+    fig = px.box(df2[filteryear], x=x, y=y,color='Income_Category_final',
     title="Box plot of Numerical Variables",
     notched=True)
     return fig
+
+
+@app.callback(
+    Output('output-container', 'children'),
+    Input('yearslider', 'value'))
+
+def update_slider(year_slider2):
+    return 'Linear Value: {}'.format(
+        str(value)
+    )
 
 ######### linear regression
 @app.callback(
@@ -387,7 +410,6 @@ def generate_linear(x,y):
     fig = px.scatter(df2, x=x, y=y, facet_col="Attrition_Flag", color="Income_Category_final", trendline="ols")
     results = px.get_trendline_results(fig)
     return fig
-    print(results)
     results.query("sex == 'Male' and smoker == 'Yes'").px_fit_results.iloc[0].summary()
 
 
