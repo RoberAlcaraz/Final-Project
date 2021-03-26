@@ -125,19 +125,18 @@ def render_page_content(pathname):
         return [
         html.H1('Data description', style={'textAlign':'center'}),
         html.Br(),
-        dcc.Dropdown(
-            id='my-vars',
-            options=[{'label': i, 'value': i} for i in df1.columns],
-            value=list(df1.columns.values)[0]
-            ),
-        html.Br(),
         html.Div(id='my-div'),
         html.Br(),
         dt.DataTable(
-            id='table',
-            columns=[{"name": i, "id": i} for i in df1.columns],
+            id='datatable-interactivity1',
+            columns=[
+                {"name": i, "id": i, "deletable": True, "selectable": True} for i in df1.columns
+            ],
             data=df1.to_dict('records'),
-        )
+            filter_action="native",
+            sort_action="native"
+        ),
+        html.Div(id='datatable-interactivity-container1')
                 ]
     elif pathname == "/page-2":
         return [
@@ -244,6 +243,16 @@ def render_page_content(pathname):
         ]
     )
     
+@app.callback(
+    Output('datatable-interactivity1', 'style_data_conditional1'),
+    Input('datatable-interactivity1', 'selected_columns1')
+)
+def update_styles(selected_columns1):
+    return [{
+        'if': { 'column_id': i },
+        'background_color': '#D2F3FF'
+    } for i in selected_columns1]
+
 @app.callback(
     Output('hist', 'figure'),
     Input('cont-vars', 'value'))
