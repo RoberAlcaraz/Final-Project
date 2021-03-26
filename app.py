@@ -163,7 +163,8 @@ def render_page_content(pathname):
             ),
         dcc.Graph(id='bar')
         ]
-
+        
+        
     elif pathname == "/page-3":
         return []
     elif pathname == "/page-4":
@@ -180,19 +181,10 @@ def render_page_content(pathname):
                     editable=True,
                     filter_action="native",
                     sort_action="native",
-                    sort_mode="multi",
-                    column_selectable="single",
-                    row_selectable="multi",
-                    row_deletable=True,
-                    selected_columns=[],
-                    selected_rows=[],
-                    page_action="native",
-                    page_current= 0,
-                    page_size= 10,
-                    ),
-        html.Div(id='datatable-interactivity-container')
+                    )
         ])
         ]
+
     elif pathname == "/page-5":
         return [
         html.H1('Plot numerical vs categorical',
@@ -204,12 +196,13 @@ def render_page_content(pathname):
         'color':'green'}),
         html.P("Categorical Variable:",
         style={'color':'red'}),
-        dcc.RadioItems(
+        dcc.Dropdown(
         id='x-axis', 
         options=[{'value': x, 'label': x} 
                  for x in ['Attrition_Flag', 'Education_Level',  'Card_Category']],
         value=['Education_Level'], 
-        labelStyle={'display': 'inline-block'}
+        multi=True
+        #labelStyle={'display': 'inline-block'}
         ),
         html.P("Numerical Variable:",
         style={'color':'blue'}),
@@ -264,32 +257,32 @@ def update_styles(selected_columns1):
         'if': { 'column_id': i },
         'background_color': '#D2F3FF'
     } for i in selected_columns1]
-
- @app.callback(
-     [Output(component_id='my-range-slider', component_property='min'),
-      Output(component_id='my-range-slider', component_property='max'),
-      Output(component_id='my-range-slider', component_property='step')],
-     [Input(component_id='cont-vars', component_property='value')])    
- def update_slider(selection):
-     if selection == 'year':
-         minimum = min(df1['year'])
-         maximum = max(df1['year'])
-         step = 1000
-     elif selection == 'odometer':
-         minimum = min(df1['odometer'])
-         maximum = max(df1['odometer'])
-         step = 10000
-     return minimum, maximum, step 
+# 
+#  @app.callback(
+#      [Output(component_id='my-range-slider', component_property='min'),
+#       Output(component_id='my-range-slider', component_property='max'),
+#       Output(component_id='my-range-slider', component_property='step')],
+#      [Input(component_id='cont-vars', component_property='value')])    
+ # def update_slider(selection):
+ #     if selection == 'year':
+ #         minimum = min(df1['year'])
+ #         maximum = max(df1['year'])
+ #         step = 1000
+ #     elif selection == 'odometer':
+ #         minimum = min(df1['odometer'])
+ #         maximum = max(df1['odometer'])
+ #         step = 10000
+ #     return minimum, maximum, step 
  
- @app.callback(
-     Output('hist', 'figure'),
-     [Input('my-range-slider', 'min'),
-     Input('my-range-slider', 'max'),
-     Input('my-range-slider', 'step')])
- def update_hist(selected_var):
-     newdf = df1[(df1[selected_var] > minimum) && (df1[selected_var] < maximum)]
-     fig = px.histogram(newdf, x=selected_var)
-     return fig
+ # @app.callback(
+ #     Output('hist', 'figure'),
+ #     [Input('my-range-slider', 'min'),
+ #     Input('my-range-slider', 'max'),
+ #     Input('my-range-slider', 'step')])
+ # def update_hist(selected_var):
+ #     newdf = df1[(df1[selected_var] > minimum) && (df1[selected_var] < maximum)]
+ #     fig = px.histogram(newdf, x=selected_var)
+ #     return fig
 
 # @app.callback(
 #      Output('hist', 'figure'),
@@ -302,9 +295,16 @@ def update_styles(selected_columns1):
 @app.callback(
     Output('bar', 'figure'),
     Input('cat-vars', 'value'))
-def update_bar(selected_var):
-    fig = px.bar(df1, x=selected_var, color='price')
-    return fig
+    
+def update_bare(selected_var):
+    return[{
+    'if': { 'column_id': i },
+        'background_color': '#D2F3FF'
+    }for i in selected_var]
+    # fig = px.bar(df1, x=selected_var, color='price')
+    # return fig
+
+# 
 
 
 ### table df2
@@ -392,6 +392,7 @@ def generate_linear(x,y):
 
 
     
+
 
 
 
