@@ -10,6 +10,7 @@ import dash_core_components as dcc
 import dash_table as dt
 import pandas as pd
 import plotly.express as px
+import statsmodels.api as sm
 import json
 
 
@@ -199,39 +200,28 @@ def render_page_content(pathname):
         value='Total_Trans_Ct', 
         labelStyle={'display': 'inline-block'}
     ),
-     html.P("Filter by the year of Customer:"),
-    dcc.RangeSlider(
-        id='yearslider',
-        min=30, max=80, step=1,
-        marks={30: '30', 80: '80'},
-        value=[30, 80]
-    ),
     dcc.Graph(id="box-plot"),
     html.Div(id='output-container', style={'margin-top': 20})
     ]
-    
+  
     elif pathname == "/page-6":
         return [
-        html.P("Categorical Variable:",
-        style={'color':'red'}),
-        dcc.RadioItems(
-        id='x-linear', 
-        options=[{'value': x, 'label': x} 
-                 for x in ['Customer_Age', 'Total_Revolving_Bal', 'Total_Trans_Amt', 'Total_Trans_Ct']],
-        value=['Customer_Age'], 
-        labelStyle={'display': 'inline-block'}),
-        dcc.RadioItems(
-        id='y-linear', 
-        options=[{'value': x, 'label': x} 
-                 for x in ['Customer_Age', 'Total_Revolving_Bal', 'Total_Trans_Amt', 'Total_Trans_Ct']],
-        value='Total_Trans_Ct', 
-        labelStyle={'display': 'inline-block'}),
-        
-        dcc.Graph(id="linear")
-        
+        html.P("Filter by total transactions in the account:",style={'textAlign':'center'}),
+        dcc.RangeSlider(
+        id='yearslider',
+        min=10, max=134, step=2,
+        marks={10: {'label': '10', 'style': {'color': '#77b0b1'}}, 
+        20: {'label': '20'},
+        50: {'label': '60'},
+        80: {'label': '80'},
+        100: {'label': '100'},
+        120: {'label': '120'},
+        134: {'label': '134','style': {'color': '#f50'}}},
+        value=[20, 100]),
+        html.Div(id='output-container-range-slider'),
+        dcc.Graph(id="linear"),
+        html.Summary(id='linear2')
         ]
-        
-    
     
     # If the user tries to reach a different page, return a 404 message
     return dbc.Jumbotron(
@@ -310,90 +300,51 @@ def update_styles(selected_columns):
         'background_color': '#D2F3FF'
     } for i in selected_columns]
 
-@app.callback(
-    Output('datatable-interactivity-container', "children"),
-    Input('datatable-interactivity', "derived_virtual_data"),
-    Input('datatable-interactivity', "derived_virtual_selected_rows"))
-    
-def update_graphs(rows, derived_virtual_selected_rows):
-
-    if derived_virtual_selected_rows is None:
-        derived_virtual_selected_rows = []
-
-    dff = df2 if rows is None else pd.DataFrame(rows)
-
-    colors = ['#7FDBFF' if i in derived_virtual_selected_rows else '#0074D9'
-              for i in range(len(dff))]
-
-    return [
-        dcc.Graph(
-            id=column,
-            figure={
-                "data": [
-                    {
-                        "x": dff["Education_Level"],
-                        "y": dff[column],
-                        "type": "bar",
-                        "marker": {"color": colors},
-                    }
-                ],
-                "layout": {
-                    "xaxis": {"automargin": True},
-                    "yaxis": {
-                        "automargin": True,
-                        "title": {"text": column}
-                    },
-                    "height": 250,
-                    "margin": {"t": 10, "l": 10, "r": 10},
-                },
-            },
-        )
-        # check if column exists - user may have deleted it
-        # If `column.deletable=False`, then you don't
-        # need to do this check.
-        for column in ["Total_Revolving_Bal", "Total_Trans_Amt", "Total_Trans_Ct"] if column in dff
-    ]
-
-
 
 ######## box-plot
 
 @app.callback(
     Output("box-plot", "figure"), 
     [Input("x-axis", "value"), 
-     Input("y-axis", "value")],
-     [Input("yearslider", "value")])
+     Input("y-axis", "value")])
      
-def generate_chart(x, y,year_slider):
-    yearlow, yearhigh = year_slider
-    filteryear = (df2['Customer_Age'] > yearlow) & (df2['Customer_Age'] < yearhigh)
-    fig = px.box(df2[filteryear], x=x, y=y,color='Income_Category_final',
+def generate_chart(x, y):
+    fig = px.box(df2, x=x, y=y,color='Income_Category_final',
     title="Box plot of Numerical Variables",
     notched=True)
     return fig
 
 
-@app.callback(
-    Output('output-container', 'children'),
-    Input('yearslider', 'value'))
-
-def update_slider(year_slider2):
-    return 'Linear Value: {}'.format(
-        str(value)
-    )
-
 ######### linear regression
 @app.callback(
     Output("linear", "figure"), 
-    [Input("x-linear", "value"),
-    Input("y-linear", "value")])
-def generate_linear(x,y):
-    fig = px.scatter(df2, x=x, y=y, facet_col="Attrition_Flag", color="Income_Category_final", trendline="ols")
-    results = px.get_trendline_results(fig)
+    [Input("yearslider", "value")])
+def generate_linear(trans_slider):
+    tranlow, tranhigh = trans_slider
+    filtertran = (df2['Total_Trans_Ct'] > tranlow) & (df2['Total_Trans_Ct'] < tranhigh)
+    fig = px.scatter(df2[filtertran], x='Total_Amt_Chng_Q4_Q1', y='Total_Ct_Chng_Q4_Q1', facet_col="Attrition_Flag", color="Income_Category_final", trendline="ols")
     return fig
-    results.query("sex == 'Male' and smoker == 'Yes'").px_fit_results.iloc[0].summary()
+
+@app.callback(
+    Output('output-container-range-slider', 'children'),
+    [Input('yearslider', 'value')])
+def update_output(value):
+    return 'You have selected "{}"'.format(value)
 
 
+
+
+@app.callback(
+    Output("linear2", "children"), 
+    [Input("yearslider", "value")])
+def generate_linear(trans_slider):
+    tranlow, tranhigh = trans_slider
+    filtertran = (df2['Total_Trans_Ct'] > tranlow) & (df2['Total_Trans_Ct'] < tranhigh)
+    fig = px.scatter(df2[filtertran], x='Total_Amt_Chng_Q4_Q1', y='Total_Ct_Chng_Q4_Q1', facet_col="Attrition_Flag", color="Income_Category_final", trendline="ols")
+    results = px.get_trendline_results(fig)
+    resul2=results.query("Attrition_Flag == 'Existing Customer' and Income_Category_final == 'Fistclass'").px_fit_results.iloc[0].summary()
+    print(result2)
+    
     
 
 
