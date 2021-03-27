@@ -223,13 +223,13 @@ def render_page_content(pathname):
         min=10, max=134, step=2,
         marks={10: {'label': '10', 'style': {'color': '#77b0b1'}}, 
         20: {'label': '20'},
-        50: {'label': '60'},
+        50: {'label': '50'},
         80: {'label': '80'},
         100: {'label': '100'},
         120: {'label': '120'},
         134: {'label': '134','style': {'color': '#f50'}}},
         value=[20, 100]),
-        html.Div(id='output-container-range-slider'),
+        html.Div(id='output-container-range-slider',style={'textAlign':'center'}),
         dcc.Graph(id="linear"),
         html.Summary(id='linear2')
         ]
