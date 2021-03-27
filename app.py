@@ -47,11 +47,15 @@ df1_cat = df1[['price', 'manufacturer', 'condition', 'fuel', 'title_status', 'tr
 df1_pred = df1[['year', 'odometer', 'manufacturer', 'condition', 'fuel', 'title_status', 'transmission', 'drive']]
 
 
-FONTSIZE = 20
+FONTSIZE = 50
 FONTCOLOR = "#F5FFFA"
 BGCOLOR ="#3445DB"
 models = ['Random Forest', 'KNN', 'Logistic']
 
+min_year = min(df1['year'])
+max_year = max(df1['year'])
+min_odometer = min(df1['odometer'])
+max_odometer = max(df1['odometer'])
 
 
 ## Bank Churnes Data Set
@@ -86,6 +90,14 @@ CONTENT_STYLE = {
     "padding": "2rem 1rem",
 }
 
+s_header={
+  'backgroundColor': 'rgb(30, 30, 30)'
+  }
+s_cell={
+  'backgroundColor': 'rgb(50, 50, 50)',
+  'color': 'white'
+  }
+
 sidebar = html.Div(
     [
         html.H2("Final Project"),
@@ -102,9 +114,9 @@ sidebar = html.Div(
                 dbc.NavLink("Vehicles: Data description", href="/page-1", active="exact"),
                 dbc.NavLink("Vehicles: Descriptive analysis", href="/page-2", active="exact"),
                 dbc.NavLink("Vehicles: Statistical models", href="/page-3", active="exact"),
-                 dbc.NavLink("Bank Churners: Data description", href="/page-4", active="exact"),
-                 dbc.NavLink("Bank Churners: Variables Plots", href="/page-5", active="exact"),
-                 dbc.NavLink("Bank Churners: Regression Plot-Summary", href="/page-6", active="exact")
+                dbc.NavLink("Bank Churners: Data description", href="/page-4", active="exact"),
+                dbc.NavLink("Bank Churners: Variables Plots", href="/page-5", active="exact"),
+                dbc.NavLink("Bank Churners: Regression Plot-Summary", href="/page-6", active="exact")
             ],
             vertical=True,
             pills=True,
@@ -146,9 +158,11 @@ def render_page_content(pathname):
 
     elif pathname == "/page-1":
         return [
-        html.H1('Data description', style={'textAlign':'center'}),
+        html.H1('Data description: Craiglist vehicles', style={'textAlign':'center'}),
         html.Br(),
-        html.Div(id='my-div'),
+        html.P('For a start, we will do a descriptive analysis to see the behavior of our variables and how to work with them,'
+        'as well as cleaning our data set. Then, we will apply different statistical tools on our data set to get the best'
+        'possible information about it in order to make the best conclusions.'),
         html.Br(),
         dt.DataTable(
             id='datatable-interactivity1',
@@ -158,7 +172,9 @@ def render_page_content(pathname):
             data=df1.to_dict('records'),
             filter_action="native",
             sort_action="native",
-            page_size= 10
+            page_size= 10,
+            style_header=s_header,
+            style_cell=s_cell,
         ),
         html.Div(id='datatable-interactivity-container1')
                 ]
@@ -192,29 +208,58 @@ def render_page_content(pathname):
             clearable=False,
             className="dcc_control",
             ),
-            
-        dcc.Dropdown(
-            id="drop",
-            options = [{'label':x, 'value':x} for x in df1_pred],
-            multi=True,
-            clearable=False,
-            className="dcc_control",
-            ),
-        html.Div(id="prueba"),
+        
         dcc.Dropdown(
             id="select_models",
+            placeholder="Select the model: ",
             options = [{'label':x, 'value':x} for x in models],
             clearable=False,
             className="dcc_control",
             ),
             
-        html.Table([
-        html.Tr([html.Td(['Precision: ']), html.Td(id='precision')]),
-        html.Tr([html.Td(['Recall: ']), html.Td(id='recall')]),
-        html.Tr([html.Td(['Accuracy: ']), html.Td(id='accuracy')]),
-        ]),
-        
+        html.Div([
+          html.Div([
+            
+            daq.LEDDisplay(
+              id='precision',
+              label="PRECISION",
+              value=0.00,
+              size=FONTSIZE,
+              color = FONTCOLOR,
+              backgroundColor=BGCOLOR
+              ),
+              
+            daq.LEDDisplay(
+              id='recall',
+              value=0.00,
+              label = "RECALL",
+              size=FONTSIZE,
+              color = FONTCOLOR,
+              backgroundColor=BGCOLOR
+              ),
+              
+            daq.LEDDisplay(
+              id='accuracy',
+              value=0.00,
+              label = "ACCURACY",
+              size=FONTSIZE,
+              color = FONTCOLOR,
+              backgroundColor=BGCOLOR
+              ),
+              
+            ], 
+            className="row flex-display", style={'padding-left':'15%'}
+            ),
+            ]
+            ),
+            
+        # html.Table([
+        # html.Tr([html.Td(['Precision: ']), html.Td(id='precision')]),
+        # html.Tr([html.Td(['Recall: ']), html.Td(id='recall')]),
+        # html.Tr([html.Td(['Accuracy: ']), html.Td(id='accuracy')]),
+        # ]),
         ]
+        
     elif pathname == "/page-4":
         return [
         html.H1('Data Description-Summary',
@@ -230,6 +275,8 @@ def render_page_content(pathname):
                     page_size= 10,
                     filter_action="native",
                     sort_action="native",
+                    style_header=s_header,
+                    style_cell=s_cell,
                     )
         ])
         ]
@@ -322,7 +369,7 @@ barTab = html.Div([
     dcc.Dropdown(
         id='cat-vars',
         options=[{'label': i, 'value': i} for i in df1_cat.columns],
-        value=[{'label': i, 'value': i} for i in df1_cat.columns][0],
+        value=['manufacturer'],
         placeholder="Select a categorical variable: ",
         multi=True
         ),
@@ -333,10 +380,35 @@ conTab = html.Div([
     dcc.Dropdown(
         id='cont-vars',
         options=[{'label': i, 'value': i} for i in df1_cont.columns],
+        value=['year'],
         placeholder="Select a continuous variable: ",
-        ),
-    dcc.Graph(id='hist')
+    ),
+    html.Div(id='cont-opt'),
+    dcc.RangeSlider(
+      id='cont-opt', 
+    ),
+    dcc.Graph(id='hist'),
 ])
+
+@app.callback(
+    Output('cont-opt', 'value'),
+    Input('cont-vars', 'value'))
+def set_var_options(selected_var):
+  if selected_var == 'year':
+    options = {
+      'min': min_year,
+      'max': max_year,
+      'step': 1000,
+    } 
+  elif selected_var == 'odometer':
+    options = {
+      'min': min_odometer,
+      'max': max_odometer,
+      'step': 10000,
+    } 
+  
+  return json.dumps(options)
+
 
 @app.callback(
     Output('tabs-content', 'children'),
@@ -366,9 +438,9 @@ def update_bar(selected_var):
     
 @app.callback(
     [
-        Output("precision", 'children'),
-        Output("recall", 'children'),
-        Output("accuracy", 'children'),
+        Output("precision", 'value'),
+        Output("recall", 'value'),
+        Output("accuracy", 'value'),
     ],
     [
         Input("predictors", "value"),
@@ -407,32 +479,14 @@ def buildModel(pred, slider, bestModel):
     yhat = mod.predict(testX)
     
     lr_probs = lr_probs[:, 1]
-    # #ns_fpr, ns_tpr, _ = roc_curve(testy, ns_probs)
-    # lr_fpr, lr_tpr, thresholds = roc_curve(testy, lr_probs)     
-    # 
-    # lr_auc = round(roc_auc_score(testy, lr_probs),2)
-    # fig_ROC = px.area(
-    #     x=lr_fpr, y=lr_tpr,
-    #     title=f'ROC Curve (AUC={lr_auc:.4f})',
-    # 
-    #     labels=dict(x='False Positive Rate', y='True Positive Rate')
-    # 
-    # )
-    # fig_ROC.add_shape(
-    #     type='line', line=dict(dash='dash'),
-    #     x0=0, x1=1, y0=0, y1=1
-    # )
-
-    # fig_ROC.update_yaxes(scaleanchor="x", scaleratio=1)
-    # fig_ROC.update_xaxes(constrain='domain')
-
+    
     # precision tp / (tp + fp)
     precision = round(precision_score(testy, yhat,pos_label='Easy'),2)
     # recall: tp / (tp + fn)
     recall = round(recall_score(testy, yhat,pos_label='Easy'),2)
     accuracy = round(accuracy_score(testy, yhat)*100,1)
     
-    return precision,recall,accuracy
+    return str(precision),str(recall),str(accuracy)
 
 @app.callback(
     Output('prueba', 'children'),
