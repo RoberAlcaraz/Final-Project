@@ -13,9 +13,6 @@ import plotly.express as px
 import statsmodels.api as sm
 import json
 
-
-
-
 # Vehicles data set
 
 df1 = pd.read_csv('https://raw.githubusercontent.com/RoberAlcaraz/First-Take-Away/main/vehicles_data.csv')
@@ -176,7 +173,9 @@ def render_page_content(pathname):
         return [
         html.H1('Plot numerical vs categorical',
         style={'textAlign':'center'}),
-        html.P('In the following graph, you can select the numerical variable according to' 
+        dcc.Tabs([
+          dcc.Tab(label="Numerical Variables",children=[
+          html.P('In the following graph, you can select the numerical variable according to' 
         'the most relevant categorical variables. Moreover, as the response variable in this case' 
         'is income, it is important to have this reference as well:',
         style={'textAlign':'center',
@@ -193,15 +192,27 @@ def render_page_content(pathname):
         ),
         html.P("Numerical Variable:",
         style={'color':'blue'}),
-    dcc.RadioItems(
+        dcc.RadioItems(
         id='y-axis', 
         options=[{'value': x, 'label': x} 
                  for x in ['Customer_Age', 'Total_Revolving_Bal', 'Total_Trans_Amt', 'Total_Trans_Ct']],
         value='Total_Trans_Ct', 
-        labelStyle={'display': 'inline-block'}
-    ),
-    dcc.Graph(id="box-plot"),
-    html.Div(id='output-container', style={'margin-top': 20})
+        labelStyle={'display': 'inline-block'}),
+         dcc.Graph(id="box-plot")
+       ]), #children #tab
+     dcc.Tab(label="Categorical Variables",children=[
+        dcc.Dropdown(
+        id='categorical', 
+        options=[{'value': x, 'label': x} 
+                 for x in ['Attrition_Flag', 'Education_Level',  'Card_Category','Income_Category_final']],
+        value=['Education_Level'],
+         clearable=False
+        #labelStyle={'display': 'inline-block'}
+        ),
+        dcc.Graph(id="piechart")
+        ])
+        ])#tabs
+        
     ]
   
     elif pathname == "/page-6":
@@ -313,6 +324,21 @@ def generate_chart(x, y):
     title="Box plot of Numerical Variables",
     notched=True)
     return fig
+  
+  
+######## pie chart
+
+@app.callback(
+    Output("piechart", "figure"), 
+    [Input("categorical", "value")])
+
+def generate_chart(x):
+    fig=px.pie(df2, values='Total_Trans_Ct', names=x,
+    title="Pie Chart of Categorical Variables")
+    return fig    
+
+
+
 
 
 ######### linear regression
