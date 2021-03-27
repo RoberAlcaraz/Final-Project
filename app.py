@@ -8,10 +8,27 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_table as dt
+# py_install("dash-daq")
+import dash_daq as daq
 import pandas as pd
 import plotly.express as px
 import statsmodels.api as sm
 import json
+
+# py_install("scikit-learn")
+import lightgbm as lgb
+import numpy as np
+from sklearn import preprocessing
+import plotly.figure_factory as ff
+from sklearn.naive_bayes import GaussianNB
+from sklearn.datasets import make_classification
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import roc_curve, roc_auc_score, recall_score, precision_score,accuracy_score
+
 
 # Vehicles data set
 
@@ -27,6 +44,14 @@ df1 = df1.drop(columns=['state', 'lat', 'long'])
 
 df1_cont = df1[['year', 'odometer']]
 df1_cat = df1[['price', 'manufacturer', 'condition', 'fuel', 'title_status', 'transmission', 'drive']]
+df1_pred = df1[['year', 'odometer', 'manufacturer', 'condition', 'fuel', 'title_status', 'transmission', 'drive']]
+
+
+FONTSIZE = 20
+FONTCOLOR = "#F5FFFA"
+BGCOLOR ="#3445DB"
+models = ['Random Forest', 'KNN', 'Logistic']
+
 
 
 ## Bank Churnes Data Set
@@ -149,7 +174,47 @@ def render_page_content(pathname):
         
         
     elif pathname == "/page-3":
-        return []
+        return [
+        html.H1('Statistical models', style={'textAlign':'center'}),
+        daq.Slider(
+            id = 'slider',
+            min=50,
+            max=90,
+            value=70,
+            handleLabel={"showCurrentValue": True,"label": "SPLIT"},
+            step=10
+            ),
+            
+        dcc.Dropdown(
+            id="predictors",
+            options = [{'label':x, 'value':x} for x in df1_pred],
+            multi=True,
+            clearable=False,
+            className="dcc_control",
+            ),
+            
+        dcc.Dropdown(
+            id="drop",
+            options = [{'label':x, 'value':x} for x in df1_pred],
+            multi=True,
+            clearable=False,
+            className="dcc_control",
+            ),
+        html.Div(id="prueba"),
+        dcc.Dropdown(
+            id="select_models",
+            options = [{'label':x, 'value':x} for x in models],
+            clearable=False,
+            className="dcc_control",
+            ),
+            
+        html.Table([
+        html.Tr([html.Td(['Precision: ']), html.Td(id='precision')]),
+        html.Tr([html.Td(['Recall: ']), html.Td(id='recall')]),
+        html.Tr([html.Td(['Accuracy: ']), html.Td(id='accuracy')]),
+        ]),
+        
+        ]
     elif pathname == "/page-4":
         return [
         html.H1('Data Description-Summary',
@@ -298,7 +363,84 @@ def update_bar(selected_var):
     return fig
 
 
-### table df2
+    
+@app.callback(
+    [
+        Output("precision", 'children'),
+        Output("recall", 'children'),
+        Output("accuracy", 'children'),
+    ],
+    [
+        Input("predictors", "value"),
+        Input("slider", "value"),
+        Input("select_models", "value")        
+    ]
+)
+def buildModel(pred, slider, bestModel):
+    
+    target = df1['price']
+    independent = df1[pred]
+    cat = list(independent.select_dtypes(include=['category']).columns)
+    
+    le = preprocessing.LabelEncoder()
+    for i in cat:
+        independent[i] = le.fit_transform(independent[i])
+    
+
+    X = pd.DataFrame(independent)
+    y = pd.DataFrame(target)
+    
+
+    trainX, testX, trainy, testy = train_test_split(X, y, train_size= slider/100, random_state=2)
+
+    if bestModel == 'Logistic':
+        mod = LogisticRegression()
+    elif bestModel == 'KNN':
+        mod = KNeighborsClassifier()
+    elif bestModel == 'Random Forest':
+        mod = RandomForestClassifier()
+    
+    mod.fit(trainX, trainy.values.ravel())
+        
+    
+    lr_probs = mod.predict_proba(testX)
+    yhat = mod.predict(testX)
+    
+    lr_probs = lr_probs[:, 1]
+    # #ns_fpr, ns_tpr, _ = roc_curve(testy, ns_probs)
+    # lr_fpr, lr_tpr, thresholds = roc_curve(testy, lr_probs)     
+    # 
+    # lr_auc = round(roc_auc_score(testy, lr_probs),2)
+    # fig_ROC = px.area(
+    #     x=lr_fpr, y=lr_tpr,
+    #     title=f'ROC Curve (AUC={lr_auc:.4f})',
+    # 
+    #     labels=dict(x='False Positive Rate', y='True Positive Rate')
+    # 
+    # )
+    # fig_ROC.add_shape(
+    #     type='line', line=dict(dash='dash'),
+    #     x0=0, x1=1, y0=0, y1=1
+    # )
+
+    # fig_ROC.update_yaxes(scaleanchor="x", scaleratio=1)
+    # fig_ROC.update_xaxes(constrain='domain')
+
+    # precision tp / (tp + fp)
+    precision = round(precision_score(testy, yhat,pos_label='Easy'),2)
+    # recall: tp / (tp + fn)
+    recall = round(recall_score(testy, yhat,pos_label='Easy'),2)
+    accuracy = round(accuracy_score(testy, yhat)*100,1)
+    
+    return precision,recall,accuracy
+
+@app.callback(
+    Output('prueba', 'children'),
+    Input('drop', 'value'))
+def update_output(value):
+    return 'You have selected "{}"'.format(value)
+
+#################################################### table df2
 
 @app.callback(
     Output('datatable-interactivity', 'style_data_conditional'),
@@ -355,7 +497,7 @@ def generate_linear(trans_slider):
     Output('output-container-range-slider', 'children'),
     [Input('yearslider', 'value')])
 def update_output(value):
-    return 'You have selected "{}"'.format(value)
+    return 'You have selected "{}"'.print(value)
 
 
 
