@@ -417,7 +417,7 @@ def render_page_content(pathname):
         html.Div(id='my-div', style={'display': 'none'}),
         dcc.Dropdown(
                   id='my-multi-dropdown',
-                  options=opt_card,
+                   options=opt_card,
                   value=df2_card[0],
                   multi=True
               ),
