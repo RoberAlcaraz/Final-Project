@@ -87,10 +87,15 @@ def generate_table(dataframe, max_rows=10):
 markdown_text = '''
 # Some references
 [Dash Core Components](https://dash.plot.ly/dash-core-components)  
+
 [Dash HTML Components](https://dash.plot.ly/dash-html-components)  
+
 [Dash Bootstrap Components](https://dash-bootstrap-components.opensource.faculty.ai/l/components)  
+
 [Dash DAQ](https://dash.plotly.com/dash-daq)
+
 [Dash Example Regression](https://github.com/plotly/dash-regression)
+
 [Nav Bar tutorial](https://morioh.com/p/68e6c284a59c)
 '''
 
@@ -250,7 +255,8 @@ def render_page_content(pathname):
           "In this page we can apply some statistical models to classify the price. "
           "Firstly, we will select the proportion that is employed to train the model, "
           "then we will choose all the predictors that will be in the model and finally "
-          "we can select between Random Forest, KNN or Logistic Regression."
+          "we can select between Random Forest, KNN or Logistic Regression. Below, "
+          "we can see the results (precision, recall and accuracy) for each method."
         ),
         html.Hr(),
         html.Br(),
