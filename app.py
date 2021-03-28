@@ -441,9 +441,11 @@ def render_page_content(pathname):
                         step=0.1,
                         min=min(df2['Total_Trans_Ct']),
                         max=max(df2['Total_Trans_Amt'])),
+         html.P('Click the button to upload the Transiction Acount:'),
          html.Button('Update filter', id='my-button'),
          dcc.Graph(id="my-graph"),
         # html.Div(id='output-container-range-slider',style={'textAlign':'center'}),
+        html.P('Click on the graph and check the customer information:'),
          dt.DataTable(
                 id='my-table',
                 columns=[{"name": i, "id": i} for i in df2.columns]
