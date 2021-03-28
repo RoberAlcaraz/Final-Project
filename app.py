@@ -54,9 +54,9 @@ BGCOLOR ="#3445DB"
 models = ['Random Forest', 'KNN', 'Logistic']
 
 min_year = min(df1['year'])
-max_year = max(df1['year'])
+max_year = df1['year'].max()
 min_odometer = min(df1['odometer'])
-max_odometer = max(df1['odometer'])
+max_odometer = df1['odometer'].max()
 
 
 ## Bank Churnes Data Set
@@ -413,43 +413,34 @@ def render_page_content(pathname):
         return [
         html.P('It is very important to take into account the number of transactions'
         'in the account in relation to the amount, so in the following graph,'
-        'you can see the customers and label them by card type'),
+        'you can see the customers and label them by card type'
+        ),
         html.Div(id='my-div', style={'display': 'none'}),
         dcc.Dropdown(
-                  id='my-multi-dropdown',
-                   options=opt_card,
-                  value=df2_card[0],
-                  multi=True
-              ),
+          id='my-multi-dropdown',
+          options=opt_card,
+          value=df2_card[0],
+          multi=True
+        ),
         html.P("Filter by total transactions in the account:",style={'textAlign':'center'}),
         dcc.RangeSlider(
-         id='my-slider',
-         # min=10, max=134, step=2,
-         # marks={10: {'label': '10', 'style': {'color': '#77b0b1'}},
-         # 20: {'label': '20'},
-         # 50: {'label': '60'},
-         # 80: {'label': '80'},
-         # 100: {'label': '100'},
-         # 120: {'label': '120'},
-         # 134: {'label': '134','style': {'color': '#f50'}}},
-         # value=[20, 100])
-                        step=0.1,
-                        min=min(df2['Total_Trans_Ct']),
-                        max=max(df2['Total_Trans_Amt'])),
-         html.P('Click the button to upload the Transiction Acount:'),
-         html.Button('Update filter', id='my-button'),
-         dcc.Graph(id="my-graph"),
-        # html.Div(id='output-container-range-slider',style={'textAlign':'center'}),
+          id='my-slider',
+          step=0.1,
+          min=min(df2['Total_Trans_Ct']),
+          max=df2['Total_Trans_Amt'].max(),
+        ),
+        html.P('Click the button to upload the Transiction Acount:'),
+        html.Button('Update filter', id='my-button'),
+        dcc.Graph(id="my-graph"),
+        
         html.P('Click on the graph and check the customer information:'),
-         dt.DataTable(
-                id='my-table',
-                columns=[{"name": i, "id": i} for i in df2.columns],
-                style_header=s_header,
-              style_cell=s_cell,
-            ),
-            
-            
-          ]
+        dt.DataTable(
+          id='my-table',
+          columns=[{"name": i, "id": i} for i in df2.columns],
+          style_header=s_header,
+          style_cell=s_cell,
+        ),
+      ]
         
     elif pathname == "/page-7":
         return [
@@ -732,7 +723,7 @@ def update_data(n_clicks, slider_range):
     if (slider_range and len(slider_range) == 2):
         l, h = slider_range
     else :
-        l, h = min(df2['Total_Trans_Ct']), max(df2['Total_Trans_Ct']);
+        l, h = min(df2['Total_Trans_Ct']), df2['Total_Trans_Ct'].max();
     df = df2[df2['Total_Trans_Ct'].between(l,h)].to_json(orient='split', date_format='iso')
     return json.dumps(df)
 
