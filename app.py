@@ -264,6 +264,8 @@ def render_page_content(pathname):
             className="dcc_control",
             ),
         html.Br(),
+        html.Button(id='submit-button-state', n_clicks=0, children='Submit'),
+        html.Br(),
         html.Div([
           html.Div([
             
@@ -451,14 +453,15 @@ conTab = html.Div([
         value=['year'],
         placeholder="Select a continuous variable: ",
     ),
-    html.Div(id='cont-opt', children=[])
+    html.Div(id='cont-opt', children=[]),
+    html.Div(id='prueba'),
+    dcc.Graph(id='hist'),
     # dcc.Graph(id='hist2'),
 ])
 
 @app.callback(
     Output('cont-opt', 'children'),
-    [Input('cont-vars', 'value').
-    Input('range-cont', 'value')])
+    Input('cont-vars', 'value'))
 def set_var_options(selected_var):
   if selected_var == "odometer":
     return html.Div([
@@ -470,7 +473,6 @@ def set_var_options(selected_var):
       value=[min_odometer, max_odometer],
       allowCross=False,
     ),
-    dcc.Graph(id='hist')
     ])
   elif selected_var == "year":
     return html.Div([
@@ -481,15 +483,14 @@ def set_var_options(selected_var):
         step=10,
         value=[min_year, max_year],
         allowCross=False,
-      ),
-      dcc.Graph(id='hist')
+      )
       ])
   return None
     
 @app.callback(
     Output('hist', 'figure'),
     [Input('cont-vars', 'value'),
-    Input('range-cont', 'value')])
+    Input('range_cont', 'value')])
 def update_hist(selected_var, range_value):
   df = df1[df1[selected_var].between(range_value[0], range_value[1])]
   fig = px.histogram(df, x=selected_var)
@@ -500,7 +501,7 @@ def update_hist(selected_var, range_value):
   [Input('cont-vars', 'value'),
   Input('range_cont', 'value')])
 def update_output(selected_var, value):
-    return 'You have selected "{}"'.format(df1[df1[selected_var].between(range_value[0], range_value[1])])
+    return 'You have selected "{}"'.format(df1[df1[selected_var].between(value[0], value[1])])
   
 
 
@@ -513,23 +514,6 @@ def update_tab(selected_tab):
     return conTab
 
 
-# @app.callback(
-#   Output('hist1', 'figure'),
-#   Input('range-cont1', 'value'))
-# def update_hist(range_value):
-#   df = df1[df1['year'].between(range_value[0], range_value[1])]
-#   fig = px.histogram(df, x='year')
-#   return fig
-
-# @app.callback(
-#   Output('hist2', 'figure'),
-#   Input('range-cont2', 'value'))
-# def update_hist(range_value):
-#   df = df1[df1['odometer'].between(range_value[0], range_value[1])]
-#   fig = px.histogram(df, x='odometer')
-#   return fig
-  
-
 @app.callback(
     Output('bar', 'figure'),
     Input('cat-vars', 'value'))
@@ -539,21 +523,75 @@ def update_bar(selected_var):
             color="price")
     return fig
 
+# @app.callback(
+#     [
+      Output("precision", 'value'),
+      Output("recall", 'value'),
+      Output("accuracy", 'value'),
+    ],
+#     [
+      Input('submit-button-state', 'n_clicks')
+      Input("predictors", "value"),
+      Input("slider", "value"),
+      Input("select_models", "value")        
+    ]
+# )
+# def buildModel(pred, slider, bestModel):
+    
+    target = df1['price']
+    independent = df1[pred]
+    cat = list(independent.select_dtypes(include=['category']).columns)
+    
+    le = preprocessing.LabelEncoder()
+    for i in cat:
+        independent[i] = le.fit_transform(independent[i])
+    
+
+    X = pd.DataFrame(independent)
+    y = pd.DataFrame(target)
+    
+
+    trainX, testX, trainy, testy = train_test_split(X, y, train_size= slider/100, random_state=2)
+
+    if bestModel == 'Logistic':
+        mod = LogisticRegression()
+    elif bestModel == 'KNN':
+        mod = KNeighborsClassifier()
+    elif bestModel == 'Random Forest':
+        mod = RandomForestClassifier()
+    
+    mod.fit(trainX, trainy.values.ravel())
+        
+    
+    lr_probs = mod.predict_proba(testX)
+    yhat = mod.predict(testX)
+    
+    lr_probs = lr_probs[:, 1]
+    
+    # precision tp / (tp + fp)
+    precision = round(precision_score(testy, yhat,pos_label='Easy'),2)
+    # recall: tp / (tp + fn)
+    recall = round(recall_score(testy, yhat,pos_label='Easy'),2)
+    accuracy = round(accuracy_score(testy, yhat)*100,1)
+    
+    return str(precision),str(recall),str(accuracy)
+
 
     
 @app.callback(
     [
-        Output("precision", 'value'),
-        Output("recall", 'value'),
-        Output("accuracy", 'value'),
+      Output("precision", 'value'),
+      Output("recall", 'value'),
+      Output("accuracy", 'value'),
     ],
     [
-        Input("predictors", "value"),
-        Input("slider", "value"),
-        Input("select_models", "value")        
+      Input('submit-button-state', 'n_clicks'),
+      State("predictors", "value"),
+      State("slider", "value"),
+      State("select_models", "value")        
     ]
 )
-def buildModel(pred, slider, bestModel):
+def buildModel(n_clikcs, pred, slider, bestModel):
     
     target = df1['price']
     independent = df1[pred]
