@@ -416,6 +416,9 @@ def render_page_content(pathname):
   
     elif pathname == "/page-6":
         return [
+        html.P('It is very important to take into account the number of transactions'
+        'in the account in relation to the amount, so in the following graph,'
+        'you can see the customers and label them by card type'),
         html.Div(id='my-div', style={'display': 'none'}),
         dcc.Dropdown(
                   id='my-multi-dropdown',
