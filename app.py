@@ -70,6 +70,29 @@ df2["Income_Category_final"] = df2["Income_Category_final"].astype("category")
 
 df2_edu = df2['Education_Level'].dropna().sort_values().unique()
 
+
+def generate_table(dataframe, max_rows=10):
+    return html.Table(
+        # Header
+        [html.Tr([html.Th(col) for col in dataframe.columns])] +
+
+        # Body
+        [html.Tr(
+            [html.Td(row[col]) for col in row.index.values]
+        ) for index, row in dataframe.head(max_rows).iterrows()]
+    )
+    
+#### REFENRENCES
+
+markdown_text = '''
+#### Some references
+[Dash Core Components](https://dash.plot.ly/dash-core-components)  
+[Dash HTML Components](https://dash.plot.ly/dash-html-components)  
+[Dash Bootstrap Components](https://dash-bootstrap-components.opensource.faculty.ai/l/components)  
+'''
+
+
+
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 ###############################################################################
@@ -145,6 +168,7 @@ app.layout = html.Div([
 )
 def render_page_content(pathname):
     if pathname == "/":
+
         return [
                 html.H1('Introduction', style={'textAlign':'center'}),
                 html.P('Craigslist is the world’s largest collection of used vehicles for sale.'
@@ -155,9 +179,24 @@ def render_page_content(pathname):
                 'For the new year, the bank has decided to create a new service depending on this income,'
                 'so that it will be able to know which customers have good income in order ,to give'
                 'them a better service and make them commit to stay with the bank.'),
-                html.H1('Some References'),
-                html.Link(children='Dash Component',href='https://dash.plot.ly/dash-core-components')
+                dcc.Markdown(markdown_text)
                 ]
+
+        return html.Div(
+        [
+          html.H1('Introduction', style={'textAlign':'center'}),
+          html.Br(),
+          html.P('Craigslist is the world’s largest collection of used vehicles for sale.'
+          'This data set includes every used vehicle entry within the United States on'
+          'Craiglist, from the year 1900 until today. This data set has been taken'
+          'from the website'),
+          html.Br(),
+          html.P('A bank manager is interested in predicting the annual income of his or her clients account holder.'
+          'For the new year, the bank has decided to create a new service depending on this income,'
+          'so that it will be able to know which customers have good income in order to give'
+          'them a better service and make them commit to stay with the bank.')
+        ])
+
 
     elif pathname == "/page-1":
         return [
@@ -183,7 +222,8 @@ def render_page_content(pathname):
                 ]
     elif pathname == "/page-2":
         return [
-        html.H1('Descriptive analysis'),
+        html.H1('Descriptive analysis', style={'textAlign':'center'}),
+        html.Br(),
         dcc.Tabs(id = "tabs", value = "tab-cont", children=[
             dcc.Tab(label = "Continuous variables", value="tab-cont"),
             dcc.Tab(label = "Categorical variables", value="tab-cat")
@@ -195,7 +235,9 @@ def render_page_content(pathname):
     elif pathname == "/page-3":
         return [
         html.H1('Statistical models', style={'textAlign':'center'}),
-        daq.Slider(
+        html.Br(),
+        html.Div([
+          daq.Slider(
             id = 'slider',
             min=50,
             max=90,
@@ -203,7 +245,9 @@ def render_page_content(pathname):
             handleLabel={"showCurrentValue": True,"label": "SPLIT"},
             step=10
             ),
-            
+        ], className="row flex-display", style={'padding-left':'35%'}
+        ),
+        html.Br(),
         dcc.Dropdown(
             id="predictors",
             options = [{'label':x, 'value':x} for x in df1_pred],
@@ -211,7 +255,7 @@ def render_page_content(pathname):
             clearable=False,
             className="dcc_control",
             ),
-        
+        html.Br(),
         dcc.Dropdown(
             id="select_models",
             placeholder="Select the model: ",
@@ -219,7 +263,7 @@ def render_page_content(pathname):
             clearable=False,
             className="dcc_control",
             ),
-            
+        html.Br(),
         html.Div([
           html.Div([
             
@@ -251,7 +295,7 @@ def render_page_content(pathname):
               ),
               
             ], 
-            className="row flex-display", style={'padding-left':'15%'}
+            className="row flex-display", style={'textAlign':'center','margin': 'auto','width': '50%','border':'3px solid green','padding': '10px'}
             ),
             ]
             ),
@@ -267,6 +311,7 @@ def render_page_content(pathname):
         return [
         html.H1('Data Description-Summary',
                 style={'textAlign':'center'}),
+        html.Br(),
         html.Div(
             [dt.DataTable(
                 id='datatable-interactivity',
@@ -288,6 +333,7 @@ def render_page_content(pathname):
         return [
         html.H1('Plot numerical vs categorical',
         style={'textAlign':'center'}),
+        html.Br(),
         dcc.Tabs([
           dcc.Tab(label="Numerical Variables",children=[
           html.P('In the following graph, you can select the numerical variable according to' 
@@ -332,6 +378,8 @@ def render_page_content(pathname):
   
     elif pathname == "/page-6":
         return [
+        html.Div(id='my-div', style={'display': 'none'}),
+        dcc.Graph(id="linear"),
         html.Div([
           dcc.Dropdown(
                     id='my-multi-dropdown',
@@ -340,10 +388,10 @@ def render_page_content(pathname):
                     value='Gradutate', 
                     multi=True
                 ),
-         html.P("Filter by total transactions in the account:",style={'textAlign':'center'}),
+        html.P("Filter by total transactions in the account:",style={'textAlign':'center'}),
         dcc.RangeSlider(
         id='yearslider',
-        min=10, max=134, step=2,
+        min=min(df2['Total_Trans_Ct']), max=max(df2['Total_Trans_Ct']), step=2,
         marks={10: {'label': '10', 'style': {'color': '#77b0b1'}}, 
         20: {'label': '20'},
         50: {'label': '50'},
@@ -354,8 +402,6 @@ def render_page_content(pathname):
         value=[20, 100]),
         html.Div(id='output-container-range-slider',style={'textAlign':'center'}),
         html.Button('Update filter', id='my-button'),
-        html.Div(id='my-div', style={'display': 'none'}),
-        dcc.Graph(id="linear"),
          dt.DataTable(
                 id='my-table',
                 columns=[{"name": i, "id": i} for i in df2.columns]
@@ -397,6 +443,7 @@ barTab = html.Div([
     dcc.Graph(id='bar')
 ])
     
+
 conTab = html.Div([
     dcc.Dropdown(
         id='cont-vars',
@@ -405,30 +452,34 @@ conTab = html.Div([
         placeholder="Select a continuous variable: ",
     ),
     html.Div(id='cont-opt'),
-    dcc.RangeSlider(
-      id='cont-opt', 
-    ),
-    dcc.Graph(id='hist'),
+    dcc.Graph(id='hist1'),
+    dcc.Graph(id='hist2'),
 ])
 
 @app.callback(
-    Output('cont-opt', 'value'),
+    Output('cont-opt', 'children'),
     Input('cont-vars', 'value'))
 def set_var_options(selected_var):
-  if selected_var == 'year':
-    options = {
-      'min': min_year,
-      'max': max_year,
-      'step': 1000,
-    } 
-  elif selected_var == 'odometer':
-    options = {
-      'min': min_odometer,
-      'max': max_odometer,
-      'step': 10000,
-    } 
-  
-  return json.dumps(options)
+  if selected_var == 'odometer':
+    return html.Div([
+    dcc.RangeSlider(
+      id='range_cont2',
+      min=min_odometer,
+      max=max_odometer,
+      step=10000,
+      value=[min_odometer, max_odometer],
+    )
+    ])
+    
+  return html.Div([
+    dcc.RangeSlider(
+      id='range_cont1',
+      min=min_year,
+      max=max_year,
+      step=1000,
+      value=[min_year, max_year],
+    )
+    ])
 
 
 @app.callback(
@@ -440,19 +491,42 @@ def update_tab(selected_tab):
     return conTab
      
  
+# @app.callback(
+#     Output('hist', 'figure'),
+#     [Input('cont-vars', 'value'),
+#     Input('range-cont', 'value')])
+# def update_hist(selected_var, range_value):
+#   df = df1[df1[selected_var].between(range_value[0], range_value[1])]
+#     fig = px.histogram(df, x=selected_var)
+#     return fig
+
 @app.callback(
-    Output('hist', 'figure'),
-    Input('cont-vars', 'value'))
-def update_hist(selected_var):
-    fig = px.histogram(df1, x=selected_var)
-    return fig
+  Output('hist1', 'figure'),
+  Input('range-cont1', 'value'))
+def update_hist(range_value):
+  df = df1[df1['year'].between(range_value[0], range_value[1])]
+  fig = px.histogram(df, x='year')
+  return fig
+  
+@app.callback(
+  Output('hist2', 'figure'),
+  Input('range-cont2', 'value'))
+def update_hist(range_value):
+  df = df1[df1['odometer'].between(range_value[0], range_value[1])]
+  fig = px.histogram(df, x='odometer')
+  return fig
      
 
 @app.callback(
     Output('bar', 'figure'),
     Input('cat-vars', 'value'))
 def update_bar(selected_var):
-    fig = px.bar(df1, x=selected_var, color='price')
+    fig = px.bar(df1, 
+            x=selected_var, 
+            color_discrete_map={
+              "Easy": "magenta",
+              "Diff": "goldenrod"
+            })
     return fig
 
 
@@ -563,7 +637,6 @@ def generate_chart(x):
     [Input('my-button', 'n_clicks')],
     [State('yearslider', 'value')])
     
-    
 def update_data(n_clicks, slider_range):
     if (slider_range and len(slider_range) == 2):
         l, h = slider_range
@@ -576,8 +649,8 @@ def update_data(n_clicks, slider_range):
 
 @app.callback(
     [Output('linear', 'figure')],
-    [Input('my-multi-dropdown', 'value'),
-     Input('yearslider', 'value')]
+    [Input('my-div', 'children'),
+     Input('my-multi-dropdown', 'value')]
 )
 
 
@@ -589,37 +662,68 @@ def update_output_graph(data, input_value):
     return  {
                 'data': [
                     go.Scatter(
-                        x=df2[df2['Education_Level'] == i]['Total_Amt_Chng_Q4_Q1'] if i in input_value else [],
-                        y=df2[df2['Education_Level'] == i]['Total_Ct_Chng_Q4_Q1'] if i in input_value else [],
-                        text=df2[df2['Education_Level'] == i]['customer'],
+                        x=df[df['Education_Level'] == i]['Total_Trans_Amt'] if i in input_value else [],
+                        y=df[df['Education_Level'] == i]['Total_Trans_Ct'] if i in input_value else [],
+                        text=df[df['Education_Level'] == i]['customer'],
                         mode='markers',
                         opacity=0.7,
                         marker={
                             'size': 15,
                             'line': {'width': 0.5, 'color': 'white'}
                         },
-                        name=i
+                        customer=i
                     ) for i in df2_edu
                 ],
                 'layout': go.Layout(
-                    xaxis={'type': 'log', 'title': 'Total_Amt_Chng_Q4_Q1'},
-                    yaxis={'title': 'Total_Ct_Chng_Q4_Q1'},
-                    margin={'l': 40, 'b': 40, 't': 10, 'r': 10},
-                    legend={'x': 0, 'y': 1},
+                    xaxis={ 'title': 'Total_Trans_Amt'},
+                    yaxis={'title': 'Total_Trans_Ct'},
                     hovermode='closest',
                     dragmode='lasso'
                 )
-            },  {
-                'data': [ go.Box(
-                            y= df2[df2['Education_Level'] == i]['Total_Trans_Ct'],
-                            name= i 
-                        ) if i in input_value else {}
-                          for i in df2_edu ]
             }
 
 
 #########################
 
+
+@app.callback(
+    [Output('yearslider', 'min'), 
+     Output('yearslider', 'max'), 
+     Output('yearslider', 'value'), 
+     Output('yearslider', 'marks')],
+    [Input('my-multi-dropdown', 'value')]
+)
+def update_slider(input_value):
+    def round(x):
+        return int(x) if x % 0.1 < 0.1 else x
+
+    s = pd.Series(input_value, name='Education_Level')
+    data = df2[df2.Education_Level.isin(s)]['Total_Trans_Ct'] 
+
+    min = round(data.min())
+    max = round(data.max())
+    mean = round(data.mean())
+    low = round((min + mean)/2)
+    high = round((max + mean) / 2)
+    marks = {min: {'label': str(min), 'style': {'color': '#77b0b1'}},
+             max: {'label': str(max), 'style': {'color': '#77b0b1'}}}
+    return min, max,  [low, high], marks 
+
+###############################
+
+@app.callback(
+    Output('my-table', 'data'),
+    [Input('linear', 'selectedData')])
+def display_selected_data(selected_data):
+    if selected_data is None or len(selected_data) == 0:
+        return []
+
+    points = selected_data['points']
+    if len(points) == 0:
+        return []
+
+    names = [x['text'] for x in points]
+    return df2[df2['customer'].isin(names)].to_dict("rows")
 
 
 
@@ -642,24 +746,6 @@ def update_output_graph(data, input_value):
     [Input('yearslider', 'value')])
 def update_output(value):
     return 'You have selected "{}"'.print(value)
-
-
-
-#### print regression
-
-@app.callback(
-    Output('my-table', 'data'),
-    [Input('linear', 'selectedData')])
-def display_selected_data(selected_data):
-    if selected_data is None or len(selected_data) == 0:
-        return []
-
-    points = selected_data['points']
-    if len(points) == 0:
-        return []
-
-    names = [x['text'] for x in points]
-    return df2[df2['Attrition_Flag'].isin(names)].to_dict("rows")
 
 
 
