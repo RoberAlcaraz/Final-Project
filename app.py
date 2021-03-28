@@ -380,19 +380,20 @@ def render_page_content(pathname):
   
     elif pathname == "/page-6":
         return [
-        html.Div(id='my-div', style={'display': 'none'}),
-        dcc.Graph(id="my-graph"),
-        html.Div([
-          dcc.Dropdown(
-                    id='my-multi-dropdown',
-                    options=opt_edu,
-                    value=df2_edu[0],
-                    multi=True
-                ),
+       # html.Div(id='my-div', style={'display': 'none'}),
+        
+          # dcc.Dropdown(
+          #           id='my-multi-dropdown',
+          #           options=opt_edu,
+          #           value=df2_edu[0],
+          #           multi=True
+          #       ),
         html.P("Filter by total transactions in the account:",style={'textAlign':'center'}),
         dcc.RangeSlider(
         id='yearslider',
-        min=min(df2['Total_Trans_Ct']), max=max(df2['Total_Trans_Ct']), step=2,
+        step=2,
+        min=min(df2['Total_Trans_Ct']),
+        max=max(df2['Total_Trans_Ct']), 
         marks={10: {'label': '10', 'style': {'color': '#77b0b1'}}, 
         20: {'label': '20'},
         50: {'label': '50'},
@@ -400,18 +401,17 @@ def render_page_content(pathname):
         100: {'label': '100'},
         120: {'label': '120'},
         134: {'label': '134','style': {'color': '#f50'}}},
-        value=[20, 100]),
+        value=[20,40]),
         html.Div(id='output-container-range-slider',style={'textAlign':'center'}),
-        html.Button('Update filter', id='my-button'),
+        dcc.Graph(id="linear"),
+        # html.Button('Update filter', id='my-button')]),
          dt.DataTable(
                 id='my-table',
                 columns=[{"name": i, "id": i} for i in df2.columns]
             )
-            ])
+            
             
           ]
-        
-                
     
     
     # If the user tries to reach a different page, return a 404 message
@@ -675,125 +675,137 @@ def generate_chart(x):
 ##################
 
 
-@app.callback(
-    Output('my-div', 'children'),
-    [Input('my-button', 'n_clicks')],
-    [State('yearslider', 'value')])
-    
-def update_data2(n_clicks, slider_range):
-    if (slider_range and len(slider_range) == 2):
-        l, h = slider_range
-    else :
-        l, h = min(df2['Total_Trans_Ct']), max(df2['Total_Trans_Ct']);
-    df = df2[df2['Total_Trans_Ct'].between(l,h)].to_json(orient='split', date_format='iso')
-    return json.dumps(df)
-  
+# @app.callback(
+#     Output('my-div', 'children'),
+#     [Input('my-button', 'n_clicks')],
+#     [State('yearslider', 'value')])
+#     
+# def update_data2(n_clicks, slider_range):
+#     if (slider_range and len(slider_range) == 2):
+#         l, h = slider_range
+#     else :
+#         l, h = min(df2['Total_Trans_Ct']), max(df2['Total_Trans_Ct']);
+#     df = df2[df2['Total_Trans_Ct'].between(l,h)].to_json(orient='split', date_format='iso')
+#     return json.dumps(df)
+#   
 #########################
 
-@app.callback(
-    [Output('my-graph', 'figure')],
-    [Input('my-div', 'children'),
-     Input('my-multi-dropdown', 'value')]
-)
-
-
-def update_output_graph2(data, input_value):
-    if data is None:
-        return {}, {}
-    dataset = json.loads(data)
-    df = pd.read_json(dataset, orient='split')
-    return  {
-                'data': [
-                    go.Scatter(
-                        x=df[df['Education_Level'] == i]['Total_Trans_Amt'] if i in input_value else [],
-                        y=df[df['Education_Level'] == i]['Total_Trans_Ct'] if i in input_value else [],
-                        text=df[df['Education_Level'] == i]['customer'],
-                        mode='markers',
-                        opacity=0.7,
-                        marker={
-                            'size': 15,
-                            'line': {'width': 0.5, 'color': 'white'}
-                        },
-                        customer=i
-                    ) for i in df2_edu
-                ],
-                'layout': go.Layout(
-                    xaxis={ 'title': 'Total_Trans_Amt'},
-                    yaxis={'title': 'Total_Trans_Ct'},
-                    hovermode='closest',
-                    dragmode='lasso'
-                )
-            }
+# @app.callback(
+#     [Output('my-graph', 'figure')],
+#     [Input('my-div', 'children'),
+#      Input('my-multi-dropdown', 'value')]
+# )
+# 
+# 
+# def update_output_graph2(data, input_value):
+#     if data is None:
+#         return {}, {}
+#     dataset = json.loads(data)
+#     df = pd.read_json(dataset, orient='split')
+#     return  {
+#                 'data': [
+#                     go.Scatter(
+#                         x=df[df['Education_Level'] == i]['Total_Trans_Amt'] if i in input_value else [],
+#                         y=df[df['Education_Level'] == i]['Total_Trans_Ct'] if i in input_value else [],
+#                         text=df[df['Education_Level'] == i]['customer'],
+#                         mode='markers',
+#                         opacity=0.7,
+#                         marker={
+#                             'size': 15,
+#                             'line': {'width': 0.5, 'color': 'white'}
+#                         },
+#                         customer=i
+#                     ) for i in df2_edu
+#                 ],
+#                 'layout': go.Layout(
+#                     xaxis={ 'title': 'Total_Trans_Amt'},
+#                     yaxis={'title': 'Total_Trans_Ct'},
+#                     hovermode='closest',
+#                     dragmode='lasso'
+#                 )
+#             }
 
 
 #########################
 
 
-@app.callback(
-    [Output('yearslider', 'min'), 
-     Output('yearslider', 'max'), 
-     Output('yearslider', 'value'), 
-     Output('yearslider', 'marks')],
-    [Input('my-multi-dropdown', 'value')]
-)
-def update_slider2(input_value):
-    def round(x):
-        return int(x) if x % 0.1 < 0.1 else x
-
-    s = pd.Series(input_value, name='Education_Level')
-    data = df2[df2.Education_Level.isin(s)]['Total_Trans_Ct'] 
-
-    min = round(data.min())
-    max = round(data.max())
-    mean = round(data.mean())
-    low = round((min + mean)/2)
-    high = round((max + mean) / 2)
-    marks = {min: {'label': str(min), 'style': {'color': '#77b0b1'}},
-             max: {'label': str(max), 'style': {'color': '#77b0b1'}}}
-    return min, max,  [low, high], marks 
+# @app.callback(
+#     [Output('yearslider', 'min'),
+#      Output('yearslider', 'max'),
+#      Output('yearslider', 'value'),
+#      Output('yearslider', 'marks')],
+#     [Input('my-multi-dropdown', 'value')]
+# )
+# def update_slider2(input_value):
+#     def round(x):
+#         return int(x) if x % 2 < 2 else x
+# 
+#     s = pd.Series(input_value, name='Education_Level')
+#     data = df2[df2.Education_Level.isin(s)]['Total_Trans_Ct']
+# 
+#     min = round(data.min())
+#     max = round(data.max())
+#     mean = round(data.mean())
+#     low = round((min + mean)/2)
+#     high = round((max + mean) / 2)
+#     marks = {min: {'label': str(min), 'style': {'color': '#77b0b1'}},
+#              max: {'label': str(max), 'style': {'color': '#77b0b1'}}}
+#     return min, max,  [low, high], marks
 
 ###############################
 
-@app.callback(
-    Output('my-table', 'data'),
-    [Input('linear', 'selectedData')])
-def display_selected_data(selected_data):
-    if selected_data is None or len(selected_data) == 0:
-        return []
-
-    points = selected_data['points']
-    if len(points) == 0:
-        return []
-
-    names = [x['text'] for x in points]
-    return df2[df2['customer'].isin(names)].to_dict("rows")
-
+# @app.callback(
+#     Output('my-table', 'data'),
+#     [Input('linear', 'selectedData')])
+# def display_selected_data(selected_data):
+#     if selected_data is None or len(selected_data) == 0:
+#         return []
+# 
+#     points = selected_data['points']
+#     if len(points) == 0:
+#         return []
+# 
+#     names = [x['text'] for x in points]
+#     return df2[df2['customer'].isin(names)].to_dict("rows")
+# 
 
 
 
 ######### linear regression
-# @app.callback(
-#     Output("linear", "figure"), 
-#     [Input("yearslider", "value")])
-# def generate_linear(trans_slider):
-#     tranlow, tranhigh = trans_slider
-#     filtertran = (df2['Total_Trans_Ct'] > tranlow) & (df2['Total_Trans_Ct'] < tranhigh)
-#     fig = px.scatter(df2[filtertran], x='Total_Amt_Chng_Q4_Q1', y='Total_Ct_Chng_Q4_Q1', facet_col="Attrition_Flag", color="Income_Category_final", trendline="ols")
-#     return fig
-#   
-#   
+@app.callback(
+    Output("linear", "figure"),
+    [Input("yearslider", "value")])
+def generate_linear(trans_slider):
+    tranlow, tranhigh = trans_slider
+    filtertran = (df2['Total_Trans_Ct'] > tranlow) & (df2['Total_Trans_Ct'] < tranhigh)
+    fig = px.scatter(df2[filtertran], x='Total_Amt_Chng_Q4_Q1', y='Total_Ct_Chng_Q4_Q1', facet_col="Attrition_Flag", color="Income_Category_final", trendline="ols")
+    return fig
+
+
 #######################
 
+@app.callback(
+    Output('output-container-range-slider', 'children'),
+    [Input('yearslider', 'value')])
+def update_output(value):
+    return 'You have selected "{}"'.print(value)
+  
+##########
+
 # @app.callback(
-#     Output('output-container-range-slider', 'children'),
-#     [Input('yearslider', 'value')])
-# def update_output(value):
-#     return 'You have selected "{}"'.print(value)
+#     Output('my-table', 'data'),
+#     [Input('linear', 'selectedData')])
+# def display_selected_data(selected_data):
+#     if selected_data is None or len(selected_data) == 0:
+#         return []
 # 
+#     points = selected_data['points']
+#     if len(points) == 0:
+#         return []
 # 
+#     names = [x['text'] for x in points]
+#     return df2[df2['customer'].isin(names)].to_dict("rows")
 # 
-
-
 
 
 
