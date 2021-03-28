@@ -68,6 +68,7 @@ df2["Education_Level"] = df2["Education_Level"].astype("category")
 df2["Card_Category"] = df2["Card_Category"].astype("category")
 df2["Income_Category_final"] = df2["Income_Category_final"].astype("category")
 
+df2_edu = df2['Education_Level'].dropna().sort_values().unique()
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -152,8 +153,10 @@ def render_page_content(pathname):
                 'from the website'),
                 html.P('A bank manager is interested in predicting the annual income of his or her clients account holder.'
                 'For the new year, the bank has decided to create a new service depending on this income,'
-                'so that it will be able to know which customers have good income in order to give'
-                'them a better service and make them commit to stay with the bank.')
+                'so that it will be able to know which customers have good income in order ,to give'
+                'them a better service and make them commit to stay with the bank.'),
+                html.H1('Some References'),
+                html.Link(children='Dash Component',href='https://dash.plot.ly/dash-core-components')
                 ]
 
     elif pathname == "/page-1":
@@ -329,7 +332,15 @@ def render_page_content(pathname):
   
     elif pathname == "/page-6":
         return [
-        html.P("Filter by total transactions in the account:",style={'textAlign':'center'}),
+        html.Div([
+          dcc.Dropdown(
+                    id='my-multi-dropdown',
+                    options=[{'value': x, 'label': x} 
+                        for x in ['High School', 'Gradutate', 'Uneducated', 'Doctorate']],
+                    value='Gradutate', 
+                    multi=True
+                ),
+         html.P("Filter by total transactions in the account:",style={'textAlign':'center'}),
         dcc.RangeSlider(
         id='yearslider',
         min=10, max=134, step=2,
@@ -342,9 +353,19 @@ def render_page_content(pathname):
         134: {'label': '134','style': {'color': '#f50'}}},
         value=[20, 100]),
         html.Div(id='output-container-range-slider',style={'textAlign':'center'}),
+        html.Button('Update filter', id='my-button'),
+        html.Div(id='my-div', style={'display': 'none'}),
         dcc.Graph(id="linear"),
-        html.Summary(id='linear2')
-        ]
+         dt.DataTable(
+                id='my-table',
+                columns=[{"name": i, "id": i} for i in df2.columns]
+            )
+            ])
+            
+          ]
+        
+                
+    
     
     # If the user tries to reach a different page, return a 404 message
     return dbc.Jumbotron(
@@ -534,18 +555,87 @@ def generate_chart(x):
     return fig    
 
 
+##################
+
+
+@app.callback(
+    Output('my-div', 'children'),
+    [Input('my-button', 'n_clicks')],
+    [State('yearslider', 'value')])
+    
+    
+def update_data(n_clicks, slider_range):
+    if (slider_range and len(slider_range) == 2):
+        l, h = slider_range
+    else :
+        l, h = min(df2['Total_Trans_Ct']), max(df2['Total_Trans_Ct']);
+    df = df2[df2['Total_Trans_Ct'].between(l,h)].to_json(orient='split', date_format='iso')
+    return json.dumps(df)
+  
+#########################
+
+@app.callback(
+    [Output('linear', 'figure')],
+    [Input('my-multi-dropdown', 'value'),
+     Input('yearslider', 'value')]
+)
+
+
+def update_output_graph(data, input_value):
+    if data is None:
+        return {}, {}
+    dataset = json.loads(data)
+    df = pd.read_json(dataset, orient='split')
+    return  {
+                'data': [
+                    go.Scatter(
+                        x=df2[df2['Education_Level'] == i]['Total_Amt_Chng_Q4_Q1'] if i in input_value else [],
+                        y=df2[df2['Education_Level'] == i]['Total_Ct_Chng_Q4_Q1'] if i in input_value else [],
+                        text=df2[df2['Education_Level'] == i]['customer'],
+                        mode='markers',
+                        opacity=0.7,
+                        marker={
+                            'size': 15,
+                            'line': {'width': 0.5, 'color': 'white'}
+                        },
+                        name=i
+                    ) for i in df2_edu
+                ],
+                'layout': go.Layout(
+                    xaxis={'type': 'log', 'title': 'Total_Amt_Chng_Q4_Q1'},
+                    yaxis={'title': 'Total_Ct_Chng_Q4_Q1'},
+                    margin={'l': 40, 'b': 40, 't': 10, 'r': 10},
+                    legend={'x': 0, 'y': 1},
+                    hovermode='closest',
+                    dragmode='lasso'
+                )
+            },  {
+                'data': [ go.Box(
+                            y= df2[df2['Education_Level'] == i]['Total_Trans_Ct'],
+                            name= i 
+                        ) if i in input_value else {}
+                          for i in df2_edu ]
+            }
+
+
+#########################
+
+
 
 
 
 ######### linear regression
-@app.callback(
-    Output("linear", "figure"), 
-    [Input("yearslider", "value")])
-def generate_linear(trans_slider):
-    tranlow, tranhigh = trans_slider
-    filtertran = (df2['Total_Trans_Ct'] > tranlow) & (df2['Total_Trans_Ct'] < tranhigh)
-    fig = px.scatter(df2[filtertran], x='Total_Amt_Chng_Q4_Q1', y='Total_Ct_Chng_Q4_Q1', facet_col="Attrition_Flag", color="Income_Category_final", trendline="ols")
-    return fig
+# @app.callback(
+#     Output("linear", "figure"), 
+#     [Input("yearslider", "value")])
+# def generate_linear(trans_slider):
+#     tranlow, tranhigh = trans_slider
+#     filtertran = (df2['Total_Trans_Ct'] > tranlow) & (df2['Total_Trans_Ct'] < tranhigh)
+#     fig = px.scatter(df2[filtertran], x='Total_Amt_Chng_Q4_Q1', y='Total_Ct_Chng_Q4_Q1', facet_col="Attrition_Flag", color="Income_Category_final", trendline="ols")
+#     return fig
+#   
+#   
+#######################
 
 @app.callback(
     Output('output-container-range-slider', 'children'),
@@ -555,19 +645,22 @@ def update_output(value):
 
 
 
+#### print regression
 
 @app.callback(
-    Output("linear2", "children"), 
-    [Input("yearslider", "value")])
-def generate_linear(trans_slider):
-    tranlow, tranhigh = trans_slider
-    filtertran = (df2['Total_Trans_Ct'] > tranlow) & (df2['Total_Trans_Ct'] < tranhigh)
-    fig = px.scatter(df2[filtertran], x='Total_Amt_Chng_Q4_Q1', y='Total_Ct_Chng_Q4_Q1', facet_col="Attrition_Flag", color="Income_Category_final", trendline="ols")
-    results = px.get_trendline_results(fig)
-    resul2=results.query("Attrition_Flag == 'Existing Customer' and Income_Category_final == 'Fistclass'").px_fit_results.iloc[0].summary()
-    print(result2)
-    
-    
+    Output('my-table', 'data'),
+    [Input('linear', 'selectedData')])
+def display_selected_data(selected_data):
+    if selected_data is None or len(selected_data) == 0:
+        return []
+
+    points = selected_data['points']
+    if len(points) == 0:
+        return []
+
+    names = [x['text'] for x in points]
+    return df2[df2['Attrition_Flag'].isin(names)].to_dict("rows")
+
 
 
 
