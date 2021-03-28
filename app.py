@@ -373,11 +373,9 @@ def render_page_content(pathname):
           dcc.Tab(label="Numerical Variables",children=[
           html.P('In the following graph, you can select the numerical variable according to' 
         'the most relevant categorical variables. Moreover, as the response variable in this case' 
-        'is income, it is important to have this reference as well:',
-        style={'textAlign':'center',
-        'color':'green'}),
-        html.P("Categorical Variable:",
-        style={'color':'red'}),
+        'is income, it is important to have this reference as well:'
+        ),
+        html.P("Categorical Variable:"),
         dcc.Dropdown(
         id='x-axis', 
         options=[{'value': x, 'label': x} 
@@ -386,8 +384,7 @@ def render_page_content(pathname):
         multi=True
         #labelStyle={'display': 'inline-block'}
         ),
-        html.P("Numerical Variable:",
-        style={'color':'blue'}),
+        html.P("Numerical Variable:"),
         dcc.RadioItems(
         id='y-axis', 
         options=[{'value': x, 'label': x} 
@@ -398,9 +395,7 @@ def render_page_content(pathname):
        ]), #children #tab
      dcc.Tab(label="Categorical Variables",children=[
        html.P('In the following graph, you can select the categorical variable'
-       'to display the proportion of the sample in this class:',
-        style={'textAlign':'center',
-        'color':'green'}),
+       'to display the proportion of the sample in this class:'),
         dcc.Dropdown(
         id='categorical', 
         options=[{'value': x, 'label': x} 
@@ -448,8 +443,11 @@ def render_page_content(pathname):
         html.P('Click on the graph and check the customer information:'),
          dt.DataTable(
                 id='my-table',
-                columns=[{"name": i, "id": i} for i in df2.columns]
-            )
+                columns=[{"name": i, "id": i} for i in df2.columns],
+                style_header=s_header,
+              style_cell=s_cell,
+            ),
+            
             
           ]
         
