@@ -85,11 +85,13 @@ def generate_table(dataframe, max_rows=10):
 #### REFENRENCES
 
 markdown_text = '''
-#### Some references
+# Some references
 [Dash Core Components](https://dash.plot.ly/dash-core-components)  
 [Dash HTML Components](https://dash.plot.ly/dash-html-components)  
 [Dash Bootstrap Components](https://dash-bootstrap-components.opensource.faculty.ai/l/components)  
+[Dash DAQ](https://dash.plotly.com/dash-daq)
 [Dash Example Regression](https://github.com/plotly/dash-regression)
+[Nav Bar tutorial](https://morioh.com/p/68e6c284a59c)
 '''
 
 
@@ -202,9 +204,14 @@ def render_page_content(pathname):
         return [
         html.H1('Data description: Craiglist vehicles', style={'textAlign':'center'}),
         html.Br(),
-        html.P('For a start, we will do a descriptive analysis to see the behavior of our variables and how to work with them,'
-        'as well as cleaning our data set. Then, we will apply different statistical tools on our data set to get the best'
+        html.P('For a start, we will do a descriptive analysis to see the behavior of our variables and how to work with them, '
+        'as well as cleaning our data set. Then, we will apply different statistical tools on our data set to get the best '
         'possible information about it in order to make the best conclusions.'),
+        html.P(
+          "In the following table, you will be able to see 10 rows of the complete "
+          "data set. Moreover, you can sort the data in every column, eliminate some "
+          "of them and search for some value in each column."
+        ),
         html.Br(),
         dt.DataTable(
             id='datatable-interactivity1',
@@ -224,6 +231,9 @@ def render_page_content(pathname):
         return [
         html.H1('Descriptive analysis', style={'textAlign':'center'}),
         html.Br(),
+        html.P(
+          "In this panel, we observe some plots for the continuous and categorical variables: "
+        ),
         dcc.Tabs(id = "tabs", value = "tab-cont", children=[
             dcc.Tab(label = "Continuous variables", value="tab-cont"),
             dcc.Tab(label = "Categorical variables", value="tab-cat")
@@ -235,6 +245,14 @@ def render_page_content(pathname):
     elif pathname == "/page-3":
         return [
         html.H1('Statistical models', style={'textAlign':'center'}),
+        html.Br(),
+        html.P(
+          "In this page we can apply some statistical models to classify the price. "
+          "Firstly, we will select the proportion that is employed to train the model, "
+          "then we will choose all the predictors that will be in the model and finally "
+          "we can select between Random Forest, KNN or Logistic Regression."
+        ),
+        html.Hr(),
         html.Br(),
         html.Div([
           daq.Slider(
@@ -252,6 +270,7 @@ def render_page_content(pathname):
             id="predictors",
             options = [{'label':x, 'value':x} for x in df1_pred],
             multi=True,
+            placeholder="Select the variables that will be in the model: ",
             clearable=False,
             className="dcc_control",
             ),
@@ -264,7 +283,10 @@ def render_page_content(pathname):
             className="dcc_control",
             ),
         html.Br(),
-        html.Button(id='submit-button-state', n_clicks=0, children='Submit'),
+        html.P(
+          "When you are ready, just press the button!"
+        ),
+        html.Button(id='submit-button-state', n_clicks=0, children='Go!'),
         html.Br(),
         html.Div([
           html.Div([
@@ -311,7 +333,7 @@ def render_page_content(pathname):
         
     elif pathname == "/page-4":
         return [
-        html.H1('Data Description-Summary',
+        html.H1('Data Description: Bank Churners',
                 style={'textAlign':'center'}),
         html.Br(),
         html.P('For this data set, I have decided to make the graphs of both numerical and categorical variables,'
@@ -416,7 +438,10 @@ def render_page_content(pathname):
         
     elif pathname == "/page-7":
         return [
-        dcc.Markdown(markdown_text)
+        html.Div([
+          dcc.Markdown(markdown_text)
+        ], style={'textAlign':'center'})
+        
         ]       
     
     
@@ -441,6 +466,7 @@ def update_tab(selected_tab):
     return vTab
   
 vTab = html.Div([
+  html.Br(),
   html.P('Craigslist is the world’s largest collection of used vehicles for sale.'
   'This data set includes every used vehicle entry within the United States on'
   ' Craiglist, from the year 1900 until today. This data set has been taken'
@@ -457,16 +483,17 @@ vTab = html.Div([
 ])
 
 bTab = html.Div([
+  html.Br(),
   html.P('A bank manager is interested in predicting the annual income of his or her clients account holder.'
-  'For the new year, the bank has decided to create a new service depending on this income,'
-  'so that it will be able to know which customers have good income in order ,to give'
+  ' For the new year, the bank has decided to create a new service depending on this income, '
+  'so that it will be able to know which customers have good income in order to give '
   'them a better service and make them commit to stay with the bank.'),
   
   html.Ul("- Attrition_Flag: if the account is closed then 1 else 0."),
-  html.Ul("- Customer_Age:   Customer's Age in Years. "),
+  html.Ul("- Customer_Age: Customer's Age in Years. "),
   html.Ul("- Gender: M=Male, F=Female. "),
   html.Ul("- Education_Level: Educational Qualification of the account holder (example: high school, college graduate, etc.). "),
-  html.Ul("- Card-Category:   Type of Card (Blue, Silver, Gold, Platinum)."),
+  html.Ul("- Card-Category: Type of Card (Blue, Silver, Gold, Platinum)."),
   html.Ul("- Credit_Limit: Credit Limit on the Credit Card. "),
   html.Ul("- Avg_Open_To_Buy: Open to Buy Credit Line (Average of last 12 months). "),
   html.Ul("- Total_Trans_Amt: Total Transaction Amount (Last 12 months). "),
@@ -487,26 +514,36 @@ def update_styles(selected_columns1):
 
 
 barTab = html.Div([
-    dcc.Dropdown(
-        id='cat-vars',
-        options=[{'label': i, 'value': i} for i in df1_cat.columns],
-        value=['manufacturer'],
-        placeholder="Select a categorical variable: ",
-        multi=True
-        ),
-    dcc.Graph(id='bar')
+  html.Br(),
+  html.P(
+    "In this tab, we have a barplot for the selected categorical variable, dividing each "
+    "category taking into account the price. Also, we can select more than one variables."
+  ),
+  dcc.Dropdown(
+      id='cat-vars',
+      options=[{'label': i, 'value': i} for i in df1_cat.columns],
+      value=['manufacturer'],
+      placeholder="Select a categorical variable: ",
+      multi=True
+      ),
+  dcc.Graph(id='bar')
 ])
     
 
 conTab = html.Div([
-    dcc.Dropdown(
-        id='cont-vars',
-        options=[{'label': i, 'value': i} for i in df1_cont.columns],
-        value=['year'],
-        placeholder="Select a continuous variable: ",
-    ),
-    html.Div(id='cont-opt', children=[]),
-    dcc.Graph(id='hist'),
+  html.Br(),
+  html.P(
+    "In the following input, we can select the continuous variable for which we want "
+    "to see their histogram."
+  ),
+  dcc.Dropdown(
+      id='cont-vars',
+      options=[{'label': i, 'value': i} for i in df1_cont.columns],
+      placeholder="Select a continuous variable: ",
+  ),
+  html.Br(),
+  html.Div(id='cont-opt', children=[]),
+  dcc.Graph(id='hist'),
 ])
 
 @app.callback(
@@ -515,6 +552,10 @@ conTab = html.Div([
 def set_var_options(selected_var):
   if selected_var == "odometer":
     return html.Div([
+    html.P(
+    "Since we have some outliers in our variables, we can select a smaller interval"
+    "to avoid them:"
+    ),
     dcc.RangeSlider(
       id='range_cont',
       min=min_odometer,
@@ -526,15 +567,19 @@ def set_var_options(selected_var):
     ])
   elif selected_var == "year":
     return html.Div([
-      dcc.RangeSlider(
-        id='range_cont',
-        min=min_year,
-        max=max_year,
-        step=10,
-        value=[min_year, max_year],
-        allowCross=False,
-      )
-      ])
+    html.P(
+    "Since we have some outliers in our variables, we can select a smaller interval"
+    "to avoid them:"
+    ),
+    dcc.RangeSlider(
+      id='range_cont',
+      min=min_year,
+      max=max_year,
+      step=10,
+      value=[min_year, max_year],
+      allowCross=False,
+    )
+    ])
   return None
     
 @app.callback(
