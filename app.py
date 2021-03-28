@@ -69,7 +69,7 @@ df2["Card_Category"] = df2["Card_Category"].astype("category")
 df2["Income_Category_final"] = df2["Income_Category_final"].astype("category")
 
 df2_edu = df2['Education_Level'].dropna().sort_values().unique()
-
+opt_edu = [{'label': x , 'value': x} for x in df2_edu]
 
 def generate_table(dataframe, max_rows=10):
     return html.Table(
@@ -379,13 +379,12 @@ def render_page_content(pathname):
     elif pathname == "/page-6":
         return [
         html.Div(id='my-div', style={'display': 'none'}),
-        dcc.Graph(id="linear"),
+        dcc.Graph(id="my-graph"),
         html.Div([
           dcc.Dropdown(
                     id='my-multi-dropdown',
-                    options=[{'value': x, 'label': x} 
-                        for x in ['High School', 'Gradutate', 'Uneducated', 'Doctorate']],
-                    value='Gradutate', 
+                    options=opt_edu,
+                    value=df2_edu[0],
                     multi=True
                 ),
         html.P("Filter by total transactions in the account:",style={'textAlign':'center'}),
@@ -637,7 +636,7 @@ def generate_chart(x):
     [Input('my-button', 'n_clicks')],
     [State('yearslider', 'value')])
     
-def update_data(n_clicks, slider_range):
+def update_data2(n_clicks, slider_range):
     if (slider_range and len(slider_range) == 2):
         l, h = slider_range
     else :
@@ -648,13 +647,13 @@ def update_data(n_clicks, slider_range):
 #########################
 
 @app.callback(
-    [Output('linear', 'figure')],
+    [Output('my-graph', 'figure')],
     [Input('my-div', 'children'),
      Input('my-multi-dropdown', 'value')]
 )
 
 
-def update_output_graph(data, input_value):
+def update_output_graph2(data, input_value):
     if data is None:
         return {}, {}
     dataset = json.loads(data)
@@ -693,7 +692,7 @@ def update_output_graph(data, input_value):
      Output('yearslider', 'marks')],
     [Input('my-multi-dropdown', 'value')]
 )
-def update_slider(input_value):
+def update_slider2(input_value):
     def round(x):
         return int(x) if x % 0.1 < 0.1 else x
 
@@ -741,14 +740,14 @@ def display_selected_data(selected_data):
 #   
 #######################
 
-@app.callback(
-    Output('output-container-range-slider', 'children'),
-    [Input('yearslider', 'value')])
-def update_output(value):
-    return 'You have selected "{}"'.print(value)
-
-
-
+# @app.callback(
+#     Output('output-container-range-slider', 'children'),
+#     [Input('yearslider', 'value')])
+# def update_output(value):
+#     return 'You have selected "{}"'.print(value)
+# 
+# 
+# 
 
 
 
