@@ -43,7 +43,7 @@ df1["drive"] = df1["drive"].astype("category")
 df1 = df1.drop(columns=['state', 'lat', 'long'])
 
 df1_cont = df1[['year', 'odometer']]
-df1_cat = df1[['price', 'manufacturer', 'condition', 'fuel', 'title_status', 'transmission', 'drive']]
+df1_cat = df1[['manufacturer', 'condition', 'fuel', 'title_status', 'transmission', 'drive']]
 df1_pred = df1[['year', 'odometer', 'manufacturer', 'condition', 'fuel', 'title_status', 'transmission', 'drive']]
 
 
@@ -375,6 +375,7 @@ def update_styles(selected_columns1):
         'background_color': '#D2F3FF'
     } for i in selected_columns1]
 
+
 barTab = html.Div([
     dcc.Dropdown(
         id='cat-vars',
@@ -394,35 +395,57 @@ conTab = html.Div([
         value=['year'],
         placeholder="Select a continuous variable: ",
     ),
-    html.Div(id='cont-opt'),
-    dcc.Graph(id='hist1'),
-    dcc.Graph(id='hist2'),
+    html.Div(id='cont-opt', children=[])
+    # dcc.Graph(id='hist2'),
 ])
 
 @app.callback(
     Output('cont-opt', 'children'),
-    Input('cont-vars', 'value'))
+    [Input('cont-vars', 'value').
+    Input('range-cont', 'value')])
 def set_var_options(selected_var):
-  if selected_var == 'odometer':
+  if selected_var == "odometer":
     return html.Div([
     dcc.RangeSlider(
-      id='range_cont2',
+      id='range_cont',
       min=min_odometer,
       max=max_odometer,
       step=10000,
       value=[min_odometer, max_odometer],
-    )
+      allowCross=False,
+    ),
+    dcc.Graph(id='hist')
     ])
+  elif selected_var == "year":
+    return html.Div([
+      dcc.RangeSlider(
+        id='range_cont',
+        min=min_year,
+        max=max_year,
+        step=10,
+        value=[min_year, max_year],
+        allowCross=False,
+      ),
+      dcc.Graph(id='hist')
+      ])
+  return None
     
-  return html.Div([
-    dcc.RangeSlider(
-      id='range_cont1',
-      min=min_year,
-      max=max_year,
-      step=1000,
-      value=[min_year, max_year],
-    )
-    ])
+@app.callback(
+    Output('hist', 'figure'),
+    [Input('cont-vars', 'value'),
+    Input('range-cont', 'value')])
+def update_hist(selected_var, range_value):
+  df = df1[df1[selected_var].between(range_value[0], range_value[1])]
+  fig = px.histogram(df, x=selected_var)
+  return fig
+  
+@app.callback(
+  Output('prueba', 'children'),
+  [Input('cont-vars', 'value'),
+  Input('range_cont', 'value')])
+def update_output(selected_var, value):
+    return 'You have selected "{}"'.format(df1[df1[selected_var].between(range_value[0], range_value[1])])
+  
 
 
 @app.callback(
@@ -432,33 +455,24 @@ def update_tab(selected_tab):
     if selected_tab == 'tab-cat':
         return barTab
     return conTab
-     
- 
-# @app.callback(
-#     Output('hist', 'figure'),
-#     [Input('cont-vars', 'value'),
-#     Input('range-cont', 'value')])
-# def update_hist(selected_var, range_value):
-#   df = df1[df1[selected_var].between(range_value[0], range_value[1])]
-#     fig = px.histogram(df, x=selected_var)
-#     return fig
 
-@app.callback(
-  Output('hist1', 'figure'),
-  Input('range-cont1', 'value'))
-def update_hist(range_value):
-  df = df1[df1['year'].between(range_value[0], range_value[1])]
-  fig = px.histogram(df, x='year')
-  return fig
+
+# @app.callback(
+#   Output('hist1', 'figure'),
+#   Input('range-cont1', 'value'))
+# def update_hist(range_value):
+#   df = df1[df1['year'].between(range_value[0], range_value[1])]
+#   fig = px.histogram(df, x='year')
+#   return fig
+
+# @app.callback(
+#   Output('hist2', 'figure'),
+#   Input('range-cont2', 'value'))
+# def update_hist(range_value):
+#   df = df1[df1['odometer'].between(range_value[0], range_value[1])]
+#   fig = px.histogram(df, x='odometer')
+#   return fig
   
-@app.callback(
-  Output('hist2', 'figure'),
-  Input('range-cont2', 'value'))
-def update_hist(range_value):
-  df = df1[df1['odometer'].between(range_value[0], range_value[1])]
-  fig = px.histogram(df, x='odometer')
-  return fig
-     
 
 @app.callback(
     Output('bar', 'figure'),
@@ -466,10 +480,7 @@ def update_hist(range_value):
 def update_bar(selected_var):
     fig = px.bar(df1, 
             x=selected_var, 
-            color_discrete_map={
-              "Easy": "magenta",
-              "Diff": "goldenrod"
-            })
+            color="price")
     return fig
 
 
@@ -526,11 +537,6 @@ def buildModel(pred, slider, bestModel):
     
     return str(precision),str(recall),str(accuracy)
 
-@app.callback(
-    Output('prueba', 'children'),
-    Input('drop', 'value'))
-def update_output(value):
-    return 'You have selected "{}"'.format(value)
 
 #################################################### table df2
 
