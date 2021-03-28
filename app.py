@@ -175,7 +175,15 @@ def render_page_content(pathname):
                 'This data set includes every used vehicle entry within the United States on'
                 ' Craiglist, from the year 1900 until today. This data set has been taken'
                 ' from the website Kaggle. A summary of the variables can be seen below: '),
-                html.Ul("<li> price : indicates the price of the vehicle.</li>"),
+                html.Ul("- price: indicates the price of the vehicle."),
+                html.Ul("- year: indicates the year of the vehicle."),
+                html.Ul("- manufacturer: indicates the class of the vehicle."),
+                html.Ul("- condition: condition of the car (like new, good, etc)."),
+                html.Ul("- fuel: fuel that consumes each car."),
+                html.Ul("- odometer: indicates the kms of a car."),
+                html.Ul("- title_status: indicates if the car is able to drive or not."),
+                html.Ul("- transmission: indicates the transmission of the cars."),
+                html.Ul("- drive: indicates the wheel drive of the vehicle."),
                 html.P('A bank manager is interested in predicting the annual income of his or her clients account holder.'
                 'For the new year, the bank has decided to create a new service depending on this income,'
                 'so that it will be able to know which customers have good income in order ,to give'
