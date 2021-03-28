@@ -144,17 +144,20 @@ app.layout = html.Div([
 )
 def render_page_content(pathname):
     if pathname == "/":
-        return [
-                html.H1('Introduction', style={'textAlign':'center'}),
-                html.P('Craigslist is the world’s largest collection of used vehicles for sale.'
-                'This data set includes every used vehicle entry within the United States on'
-                'Craiglist, from the year 1900 until today. This data set has been taken'
-                'from the website'),
-                html.P('A bank manager is interested in predicting the annual income of his or her clients account holder.'
-                'For the new year, the bank has decided to create a new service depending on this income,'
-                'so that it will be able to know which customers have good income in order to give'
-                'them a better service and make them commit to stay with the bank.')
-                ]
+        return html.Div(
+        [
+          html.H1('Introduction', style={'textAlign':'center'}),
+          html.Br(),
+          html.P('Craigslist is the world’s largest collection of used vehicles for sale.'
+          'This data set includes every used vehicle entry within the United States on'
+          'Craiglist, from the year 1900 until today. This data set has been taken'
+          'from the website'),
+          html.Br(),
+          html.P('A bank manager is interested in predicting the annual income of his or her clients account holder.'
+          'For the new year, the bank has decided to create a new service depending on this income,'
+          'so that it will be able to know which customers have good income in order to give'
+          'them a better service and make them commit to stay with the bank.')
+        ])
 
     elif pathname == "/page-1":
         return [
@@ -180,7 +183,8 @@ def render_page_content(pathname):
                 ]
     elif pathname == "/page-2":
         return [
-        html.H1('Descriptive analysis'),
+        html.H1('Descriptive analysis', style={'textAlign':'center'}),
+        html.Br(),
         dcc.Tabs(id = "tabs", value = "tab-cont", children=[
             dcc.Tab(label = "Continuous variables", value="tab-cont"),
             dcc.Tab(label = "Categorical variables", value="tab-cat")
@@ -192,7 +196,9 @@ def render_page_content(pathname):
     elif pathname == "/page-3":
         return [
         html.H1('Statistical models', style={'textAlign':'center'}),
-        daq.Slider(
+        html.Br(),
+        html.Div([
+          daq.Slider(
             id = 'slider',
             min=50,
             max=90,
@@ -200,7 +206,9 @@ def render_page_content(pathname):
             handleLabel={"showCurrentValue": True,"label": "SPLIT"},
             step=10
             ),
-            
+        ], className="row flex-display", style={'padding-left':'35%'}
+        ),
+        html.Br(),
         dcc.Dropdown(
             id="predictors",
             options = [{'label':x, 'value':x} for x in df1_pred],
@@ -208,7 +216,7 @@ def render_page_content(pathname):
             clearable=False,
             className="dcc_control",
             ),
-        
+        html.Br(),
         dcc.Dropdown(
             id="select_models",
             placeholder="Select the model: ",
@@ -216,7 +224,7 @@ def render_page_content(pathname):
             clearable=False,
             className="dcc_control",
             ),
-            
+        html.Br(),
         html.Div([
           html.Div([
             
@@ -248,7 +256,7 @@ def render_page_content(pathname):
               ),
               
             ], 
-            className="row flex-display", style={'padding-left':'15%'}
+            className="row flex-display", style={'margin': 'auto','width': '50%','border':'3px solid green','padding': '10px'}
             ),
             ]
             ),
@@ -264,6 +272,7 @@ def render_page_content(pathname):
         return [
         html.H1('Data Description-Summary',
                 style={'textAlign':'center'}),
+        html.Br(),
         html.Div(
             [dt.DataTable(
                 id='datatable-interactivity',
@@ -285,6 +294,7 @@ def render_page_content(pathname):
         return [
         html.H1('Plot numerical vs categorical',
         style={'textAlign':'center'}),
+        html.Br(),
         dcc.Tabs([
           dcc.Tab(label="Numerical Variables",children=[
           html.P('In the following graph, you can select the numerical variable according to' 
@@ -376,6 +386,7 @@ barTab = html.Div([
     dcc.Graph(id='bar')
 ])
     
+
 conTab = html.Div([
     dcc.Dropdown(
         id='cont-vars',
@@ -384,30 +395,34 @@ conTab = html.Div([
         placeholder="Select a continuous variable: ",
     ),
     html.Div(id='cont-opt'),
-    dcc.RangeSlider(
-      id='cont-opt', 
-    ),
-    dcc.Graph(id='hist'),
+    dcc.Graph(id='hist1'),
+    dcc.Graph(id='hist2'),
 ])
 
 @app.callback(
-    Output('cont-opt', 'value'),
+    Output('cont-opt', 'children'),
     Input('cont-vars', 'value'))
 def set_var_options(selected_var):
-  if selected_var == 'year':
-    options = {
-      'min': min_year,
-      'max': max_year,
-      'step': 1000,
-    } 
-  elif selected_var == 'odometer':
-    options = {
-      'min': min_odometer,
-      'max': max_odometer,
-      'step': 10000,
-    } 
-  
-  return json.dumps(options)
+  if selected_var == 'odometer':
+    return html.Div([
+    dcc.RangeSlider(
+      id='range_cont2',
+      min=min_odometer,
+      max=max_odometer,
+      step=10000,
+      value=[min_odometer, max_odometer],
+    )
+    ])
+    
+  return html.Div([
+    dcc.RangeSlider(
+      id='range_cont1',
+      min=min_year,
+      max=max_year,
+      step=1000,
+      value=[min_year, max_year],
+    )
+    ])
 
 
 @app.callback(
@@ -419,19 +434,42 @@ def update_tab(selected_tab):
     return conTab
      
  
+# @app.callback(
+#     Output('hist', 'figure'),
+#     [Input('cont-vars', 'value'),
+#     Input('range-cont', 'value')])
+# def update_hist(selected_var, range_value):
+#   df = df1[df1[selected_var].between(range_value[0], range_value[1])]
+#     fig = px.histogram(df, x=selected_var)
+#     return fig
+
 @app.callback(
-    Output('hist', 'figure'),
-    Input('cont-vars', 'value'))
-def update_hist(selected_var):
-    fig = px.histogram(df1, x=selected_var)
-    return fig
+  Output('hist1', 'figure'),
+  Input('range-cont1', 'value'))
+def update_hist(range_value):
+  df = df1[df1['year'].between(range_value[0], range_value[1])]
+  fig = px.histogram(df, x='year')
+  return fig
+  
+@app.callback(
+  Output('hist2', 'figure'),
+  Input('range-cont2', 'value'))
+def update_hist(range_value):
+  df = df1[df1['odometer'].between(range_value[0], range_value[1])]
+  fig = px.histogram(df, x='odometer')
+  return fig
      
 
 @app.callback(
     Output('bar', 'figure'),
     Input('cat-vars', 'value'))
 def update_bar(selected_var):
-    fig = px.bar(df1, x=selected_var, color='price')
+    fig = px.bar(df1, 
+            x=selected_var, 
+            color_discrete_map={
+              "Easy": "magenta",
+              "Diff": "goldenrod"
+            })
     return fig
 
 
