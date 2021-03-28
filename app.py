@@ -314,6 +314,11 @@ def render_page_content(pathname):
         html.H1('Data Description-Summary',
                 style={'textAlign':'center'}),
         html.Br(),
+        html.P('For this data set, I have decided to make the graphs of both numerical and categorical variables,'
+        'so you can make the boxplot of the numerical variables and the pie chat of the categorical variables.'
+        'Finally, you will be able to perform a regression analysis of the total number of customer transactions'
+        'for both Ct and Amt.'),
+        html.Br(),
         html.Div(
             [dt.DataTable(
                 id='datatable-interactivity',
