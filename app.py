@@ -173,8 +173,9 @@ def render_page_content(pathname):
                 html.H1('Introduction', style={'textAlign':'center'}),
                 html.P('Craigslist is the world’s largest collection of used vehicles for sale.'
                 'This data set includes every used vehicle entry within the United States on'
-                'Craiglist, from the year 1900 until today. This data set has been taken'
-                'from the website'),
+                ' Craiglist, from the year 1900 until today. This data set has been taken'
+                ' from the website Kaggle. A summary of the variables can be seen below: '),
+                html.Ul("<li> price : indicates the price of the vehicle.</li>"),
                 html.P('A bank manager is interested in predicting the annual income of his or her clients account holder.'
                 'For the new year, the bank has decided to create a new service depending on this income,'
                 'so that it will be able to know which customers have good income in order ,to give'
@@ -380,20 +381,19 @@ def render_page_content(pathname):
   
     elif pathname == "/page-6":
         return [
-       # html.Div(id='my-div', style={'display': 'none'}),
-        
-          # dcc.Dropdown(
-          #           id='my-multi-dropdown',
-          #           options=opt_edu,
-          #           value=df2_edu[0],
-          #           multi=True
-          #       ),
+        html.Div(id='my-div', style={'display': 'none'}),
+        dcc.Graph(id="my-graph"),
+        html.Div([
+          dcc.Dropdown(
+                    id='my-multi-dropdown',
+                    options=opt_edu,
+                    value=df2_edu[0],
+                    multi=True
+                ),
         html.P("Filter by total transactions in the account:",style={'textAlign':'center'}),
         dcc.RangeSlider(
         id='yearslider',
-        step=2,
-        min=min(df2['Total_Trans_Ct']),
-        max=max(df2['Total_Trans_Ct']), 
+        min=min(df2['Total_Trans_Ct']), max=max(df2['Total_Trans_Ct']), step=2,
         marks={10: {'label': '10', 'style': {'color': '#77b0b1'}}, 
         20: {'label': '20'},
         50: {'label': '50'},
@@ -401,17 +401,18 @@ def render_page_content(pathname):
         100: {'label': '100'},
         120: {'label': '120'},
         134: {'label': '134','style': {'color': '#f50'}}},
-        value=[20,40]),
+        value=[20, 100]),
         html.Div(id='output-container-range-slider',style={'textAlign':'center'}),
-        dcc.Graph(id="linear"),
-        # html.Button('Update filter', id='my-button')]),
+        html.Button('Update filter', id='my-button'),
          dt.DataTable(
                 id='my-table',
                 columns=[{"name": i, "id": i} for i in df2.columns]
             )
-            
+            ])
             
           ]
+        
+                
     
     
     # If the user tries to reach a different page, return a 404 message
@@ -454,9 +455,7 @@ conTab = html.Div([
         placeholder="Select a continuous variable: ",
     ),
     html.Div(id='cont-opt', children=[]),
-    html.Div(id='prueba'),
     dcc.Graph(id='hist'),
-    # dcc.Graph(id='hist2'),
 ])
 
 @app.callback(
@@ -495,14 +494,7 @@ def update_hist(selected_var, range_value):
   df = df1[df1[selected_var].between(range_value[0], range_value[1])]
   fig = px.histogram(df, x=selected_var)
   return fig
-  
-@app.callback(
-  Output('prueba', 'children'),
-  [Input('cont-vars', 'value'),
-  Input('range_cont', 'value')])
-def update_output(selected_var, value):
-    return 'You have selected "{}"'.format(df1[df1[selected_var].between(value[0], value[1])])
-  
+
 
 
 @app.callback(
@@ -523,61 +515,7 @@ def update_bar(selected_var):
             color="price")
     return fig
 
-# @app.callback(
-#     [
-      Output("precision", 'value'),
-      Output("recall", 'value'),
-      Output("accuracy", 'value'),
-    ],
-#     [
-      Input('submit-button-state', 'n_clicks')
-      Input("predictors", "value"),
-      Input("slider", "value"),
-      Input("select_models", "value")        
-    ]
-# )
-# def buildModel(pred, slider, bestModel):
-    
-    target = df1['price']
-    independent = df1[pred]
-    cat = list(independent.select_dtypes(include=['category']).columns)
-    
-    le = preprocessing.LabelEncoder()
-    for i in cat:
-        independent[i] = le.fit_transform(independent[i])
-    
 
-    X = pd.DataFrame(independent)
-    y = pd.DataFrame(target)
-    
-
-    trainX, testX, trainy, testy = train_test_split(X, y, train_size= slider/100, random_state=2)
-
-    if bestModel == 'Logistic':
-        mod = LogisticRegression()
-    elif bestModel == 'KNN':
-        mod = KNeighborsClassifier()
-    elif bestModel == 'Random Forest':
-        mod = RandomForestClassifier()
-    
-    mod.fit(trainX, trainy.values.ravel())
-        
-    
-    lr_probs = mod.predict_proba(testX)
-    yhat = mod.predict(testX)
-    
-    lr_probs = lr_probs[:, 1]
-    
-    # precision tp / (tp + fp)
-    precision = round(precision_score(testy, yhat,pos_label='Easy'),2)
-    # recall: tp / (tp + fn)
-    recall = round(recall_score(testy, yhat,pos_label='Easy'),2)
-    accuracy = round(accuracy_score(testy, yhat)*100,1)
-    
-    return str(precision),str(recall),str(accuracy)
-
-
-    
 @app.callback(
     [
       Output("precision", 'value'),
@@ -675,154 +613,128 @@ def generate_chart(x):
 ##################
 
 
-# @app.callback(
-#     Output('my-div', 'children'),
-#     [Input('my-button', 'n_clicks')],
-#     [State('yearslider', 'value')])
-#     
-# def update_data2(n_clicks, slider_range):
-#     if (slider_range and len(slider_range) == 2):
-#         l, h = slider_range
-#     else :
-#         l, h = min(df2['Total_Trans_Ct']), max(df2['Total_Trans_Ct']);
-#     df = df2[df2['Total_Trans_Ct'].between(l,h)].to_json(orient='split', date_format='iso')
-#     return json.dumps(df)
-#   
+@app.callback(
+    Output('my-div', 'children'),
+    [Input('my-button', 'n_clicks')],
+    [State('yearslider', 'value')])
+    
+def update_data2(n_clicks, slider_range):
+    if (slider_range and len(slider_range) == 2):
+        l, h = slider_range
+    else :
+        l, h = min(df2['Total_Trans_Ct']), max(df2['Total_Trans_Ct']);
+    df = df2[df2['Total_Trans_Ct'].between(l,h)].to_json(orient='split', date_format='iso')
+    return json.dumps(df)
+  
 #########################
 
-# @app.callback(
-#     [Output('my-graph', 'figure')],
-#     [Input('my-div', 'children'),
-#      Input('my-multi-dropdown', 'value')]
-# )
-# 
-# 
-# def update_output_graph2(data, input_value):
-#     if data is None:
-#         return {}, {}
-#     dataset = json.loads(data)
-#     df = pd.read_json(dataset, orient='split')
-#     return  {
-#                 'data': [
-#                     go.Scatter(
-#                         x=df[df['Education_Level'] == i]['Total_Trans_Amt'] if i in input_value else [],
-#                         y=df[df['Education_Level'] == i]['Total_Trans_Ct'] if i in input_value else [],
-#                         text=df[df['Education_Level'] == i]['customer'],
-#                         mode='markers',
-#                         opacity=0.7,
-#                         marker={
-#                             'size': 15,
-#                             'line': {'width': 0.5, 'color': 'white'}
-#                         },
-#                         customer=i
-#                     ) for i in df2_edu
-#                 ],
-#                 'layout': go.Layout(
-#                     xaxis={ 'title': 'Total_Trans_Amt'},
-#                     yaxis={'title': 'Total_Trans_Ct'},
-#                     hovermode='closest',
-#                     dragmode='lasso'
-#                 )
-#             }
+@app.callback(
+    [Output('my-graph', 'figure')],
+    [Input('my-div', 'children'),
+     Input('my-multi-dropdown', 'value')]
+)
+
+
+def update_output_graph2(data, input_value):
+    if data is None:
+        return {}, {}
+    dataset = json.loads(data)
+    df = pd.read_json(dataset, orient='split')
+    return  {
+                'data': [
+                    go.Scatter(
+                        x=df[df['Education_Level'] == i]['Total_Trans_Amt'] if i in input_value else [],
+                        y=df[df['Education_Level'] == i]['Total_Trans_Ct'] if i in input_value else [],
+                        text=df[df['Education_Level'] == i]['customer'],
+                        mode='markers',
+                        opacity=0.7,
+                        marker={
+                            'size': 15,
+                            'line': {'width': 0.5, 'color': 'white'}
+                        },
+                        customer=i
+                    ) for i in df2_edu
+                ],
+                'layout': go.Layout(
+                    xaxis={ 'title': 'Total_Trans_Amt'},
+                    yaxis={'title': 'Total_Trans_Ct'},
+                    hovermode='closest',
+                    dragmode='lasso'
+                )
+            }
 
 
 #########################
 
 
-# @app.callback(
-#     [Output('yearslider', 'min'),
-#      Output('yearslider', 'max'),
-#      Output('yearslider', 'value'),
-#      Output('yearslider', 'marks')],
-#     [Input('my-multi-dropdown', 'value')]
-# )
-# def update_slider2(input_value):
-#     def round(x):
-#         return int(x) if x % 2 < 2 else x
-# 
-#     s = pd.Series(input_value, name='Education_Level')
-#     data = df2[df2.Education_Level.isin(s)]['Total_Trans_Ct']
-# 
-#     min = round(data.min())
-#     max = round(data.max())
-#     mean = round(data.mean())
-#     low = round((min + mean)/2)
-#     high = round((max + mean) / 2)
-#     marks = {min: {'label': str(min), 'style': {'color': '#77b0b1'}},
-#              max: {'label': str(max), 'style': {'color': '#77b0b1'}}}
-#     return min, max,  [low, high], marks
+@app.callback(
+    [Output('yearslider', 'min'), 
+     Output('yearslider', 'max'), 
+     Output('yearslider', 'value'), 
+     Output('yearslider', 'marks')],
+    [Input('my-multi-dropdown', 'value')]
+)
+def update_slider2(input_value):
+    def round(x):
+        return int(x) if x % 0.1 < 0.1 else x
+
+    s = pd.Series(input_value, name='Education_Level')
+    data = df2[df2.Education_Level.isin(s)]['Total_Trans_Ct'] 
+
+    min = round(data.min())
+    max = round(data.max())
+    mean = round(data.mean())
+    low = round((min + mean)/2)
+    high = round((max + mean) / 2)
+    marks = {min: {'label': str(min), 'style': {'color': '#77b0b1'}},
+             max: {'label': str(max), 'style': {'color': '#77b0b1'}}}
+    return min, max,  [low, high], marks 
 
 ###############################
 
-# @app.callback(
-#     Output('my-table', 'data'),
-#     [Input('linear', 'selectedData')])
-# def display_selected_data(selected_data):
-#     if selected_data is None or len(selected_data) == 0:
-#         return []
-# 
-#     points = selected_data['points']
-#     if len(points) == 0:
-#         return []
-# 
-#     names = [x['text'] for x in points]
-#     return df2[df2['customer'].isin(names)].to_dict("rows")
-# 
+@app.callback(
+    Output('my-table', 'data'),
+    [Input('linear', 'selectedData')])
+def display_selected_data(selected_data):
+    if selected_data is None or len(selected_data) == 0:
+        return []
+
+    points = selected_data['points']
+    if len(points) == 0:
+        return []
+
+    names = [x['text'] for x in points]
+    return df2[df2['customer'].isin(names)].to_dict("rows")
+
 
 
 
 ######### linear regression
-@app.callback(
-    Output("linear", "figure"),
-    [Input("yearslider", "value")])
-def generate_linear(trans_slider):
-    tranlow, tranhigh = trans_slider
-    filtertran = (df2['Total_Trans_Ct'] > tranlow) & (df2['Total_Trans_Ct'] < tranhigh)
-    fig = px.scatter(df2[filtertran], x='Total_Amt_Chng_Q4_Q1', y='Total_Ct_Chng_Q4_Q1', facet_col="Attrition_Flag", color="Income_Category_final", trendline="ols")
-    return fig
-
-
+# @app.callback(
+#     Output("linear", "figure"), 
+#     [Input("yearslider", "value")])
+# def generate_linear(trans_slider):
+#     tranlow, tranhigh = trans_slider
+#     filtertran = (df2['Total_Trans_Ct'] > tranlow) & (df2['Total_Trans_Ct'] < tranhigh)
+#     fig = px.scatter(df2[filtertran], x='Total_Amt_Chng_Q4_Q1', y='Total_Ct_Chng_Q4_Q1', facet_col="Attrition_Flag", color="Income_Category_final", trendline="ols")
+#     return fig
+#   
+#   
 #######################
 
-@app.callback(
-    Output('output-container-range-slider', 'children'),
-    [Input('yearslider', 'value')])
-def update_output(value):
-    return 'You have selected "{}"'.print(value)
-  
-##########
-
 # @app.callback(
-#     Output('my-table', 'data'),
-#     [Input('linear', 'selectedData')])
-# def display_selected_data(selected_data):
-#     if selected_data is None or len(selected_data) == 0:
-#         return []
+#     Output('output-container-range-slider', 'children'),
+#     [Input('yearslider', 'value')])
+# def update_output(value):
+#     return 'You have selected "{}"'.print(value)
 # 
-#     points = selected_data['points']
-#     if len(points) == 0:
-#         return []
 # 
-#     names = [x['text'] for x in points]
-#     return df2[df2['customer'].isin(names)].to_dict("rows")
 # 
 
 
 
-
-
-# @app.callback(
-#     Output('my-div', 'info'),
-#     Input('my-vars', 'value')
-# )
-# def info_var(input_var):
-#     filtered_df = df1[input_var]
-#     df = pd.DataFrame(filtered_df)
-#     return df.describe()
 
 if __name__=='__main__':
     app.run_server()
-
-
 
 
