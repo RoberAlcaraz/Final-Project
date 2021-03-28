@@ -256,7 +256,7 @@ def render_page_content(pathname):
               ),
               
             ], 
-            className="row flex-display", style={'margin': 'auto','width': '50%','border':'3px solid green','padding': '10px'}
+            className="row flex-display", style={'textAlign':'center','margin': 'auto','width': '50%','border':'3px solid green','padding': '10px'}
             ),
             ]
             ),
