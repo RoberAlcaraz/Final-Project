@@ -141,7 +141,8 @@ sidebar = html.Div(
                 dbc.NavLink("Vehicles: Statistical models", href="/page-3", active="exact"),
                 dbc.NavLink("Bank Churners: Data description", href="/page-4", active="exact"),
                 dbc.NavLink("Bank Churners: Variables Plots", href="/page-5", active="exact"),
-                dbc.NavLink("Bank Churners: Regression Plot-Summary", href="/page-6", active="exact")
+                dbc.NavLink("Bank Churners: Regression Plot-Summary", href="/page-6", active="exact"),
+                dbc.NavLink("References", href="/page-7", active="exact"),
             ],
             vertical=True,
             pills=True,
@@ -172,38 +173,14 @@ def render_page_content(pathname):
 
         return [
                 html.H1('Introduction', style={'textAlign':'center'}),
-                html.P('Craigslist is the world’s largest collection of used vehicles for sale.'
-                'This data set includes every used vehicle entry within the United States on'
-                ' Craiglist, from the year 1900 until today. This data set has been taken'
-                ' from the website Kaggle. A summary of the variables can be seen below: '),
-                html.Ul("- price: indicates the price of the vehicle."),
-                html.Ul("- year: indicates the year of the vehicle."),
-                html.Ul("- manufacturer: indicates the class of the vehicle."),
-                html.Ul("- condition: condition of the car (like new, good, etc)."),
-                html.Ul("- fuel: fuel that consumes each car."),
-                html.Ul("- odometer: indicates the kms of a car."),
-                html.Ul("- title_status: indicates if the car is able to drive or not."),
-                html.Ul("- transmission: indicates the transmission of the cars."),
-                html.Ul("- drive: indicates the wheel drive of the vehicle."),
-                html.P('A bank manager is interested in predicting the annual income of his or her clients account holder.'
-                'For the new year, the bank has decided to create a new service depending on this income,'
-                'so that it will be able to know which customers have good income in order ,to give'
-                'them a better service and make them commit to stay with the bank.'),
-                
-                 html.Ul("- Attrition_Flag: if the account is closed then 1 else 0."),
-                 html.Ul("- Customer_Age:   Customer's Age in Years. "),
-                 html.Ul("- Gender: M=Male, F=Female. "),
-                 html.Ul("- Education_Level: Educational Qualification of the account holder (example: high school, college graduate, etc.). "),
-                 html.Ul("- Card-Category:   Type of Card (Blue, Silver, Gold, Platinum)."),
-                 html.Ul("- Credit_Limit: Credit Limit on the Credit Card. "),
-                 html.Ul("- Avg_Open_To_Buy: Open to Buy Credit Line (Average of last 12 months). "),
-                 html.Ul("- Total_Trans_Amt: Total Transaction Amount (Last 12 months). "),
-                 html.Ul("- Total_Trans_Ct: Total Transaction Count (Last 12 months). "),
-                 html.Ul("- Total_Ct_Chng_Q4_Q1: Change in Transaction Count (Q4 over Q1). "),
-                 html.Ul("- Income_Category:Demographic variable - Annual Income Category of the account holder (< 40K, 40K - 60K, 60K - 0K, 80K-120K, > "),
-                 
-                dcc.Markdown(markdown_text)
-                ]
+                html.Br(),
+                dcc.Tabs(id = "tabs-i", value = "tab-v", children=[
+                  dcc.Tab(label = "Vehicles data set", value="tab-v"),
+                  dcc.Tab(label = "Bank Churners data set", value="tab-b")
+                  ]
+                ),
+                html.Div(id = "tabs-intro"),
+        ]
 
         return html.Div(
         [
@@ -432,7 +409,10 @@ def render_page_content(pathname):
             
           ]
         
-                
+    elif pathname == "/page-7":
+        return [
+        dcc.Markdown(markdown_text)
+        ]       
     
     
     # If the user tries to reach a different page, return a 404 message
@@ -444,6 +424,52 @@ def render_page_content(pathname):
         ]
     )
     
+    
+# CALLBACKS
+##################################################################
+@app.callback(
+    Output('tabs-intro', 'children'),
+    Input('tabs-i', 'value'))
+def update_tab(selected_tab):
+    if selected_tab == 'tab-b':
+        return bTab
+    return vTab
+  
+vTab = html.Div([
+  html.P('Craigslist is the world’s largest collection of used vehicles for sale.'
+  'This data set includes every used vehicle entry within the United States on'
+  ' Craiglist, from the year 1900 until today. This data set has been taken'
+  ' from the website Kaggle. A summary of the variables can be seen below: '),
+  html.Ul("- price: indicates the price of the vehicle."),
+  html.Ul("- year: indicates the year of the vehicle."),
+  html.Ul("- manufacturer: indicates the class of the vehicle."),
+  html.Ul("- condition: condition of the car (like new, good, etc)."),
+  html.Ul("- fuel: fuel that consumes each car."),
+  html.Ul("- odometer: indicates the kms of a car."),
+  html.Ul("- title_status: indicates if the car is able to drive or not."),
+  html.Ul("- transmission: indicates the transmission of the cars."),
+  html.Ul("- drive: indicates the wheel drive of the vehicle."),
+])
+
+bTab = html.Div([
+  html.P('A bank manager is interested in predicting the annual income of his or her clients account holder.'
+  'For the new year, the bank has decided to create a new service depending on this income,'
+  'so that it will be able to know which customers have good income in order ,to give'
+  'them a better service and make them commit to stay with the bank.'),
+  
+  html.Ul("- Attrition_Flag: if the account is closed then 1 else 0."),
+  html.Ul("- Customer_Age:   Customer's Age in Years. "),
+  html.Ul("- Gender: M=Male, F=Female. "),
+  html.Ul("- Education_Level: Educational Qualification of the account holder (example: high school, college graduate, etc.). "),
+  html.Ul("- Card-Category:   Type of Card (Blue, Silver, Gold, Platinum)."),
+  html.Ul("- Credit_Limit: Credit Limit on the Credit Card. "),
+  html.Ul("- Avg_Open_To_Buy: Open to Buy Credit Line (Average of last 12 months). "),
+  html.Ul("- Total_Trans_Amt: Total Transaction Amount (Last 12 months). "),
+  html.Ul("- Total_Trans_Ct: Total Transaction Count (Last 12 months). "),
+  html.Ul("- Total_Ct_Chng_Q4_Q1: Change in Transaction Count (Q4 over Q1). "),
+  html.Ul("- Income_Category:Demographic variable - Annual Income Category of the account holder (< 40K, 40K - 60K, 60K - 0K, 80K-120K, > "),
+])
+
 @app.callback(
     Output('datatable-interactivity1', 'style_data_conditional1'),
     Input('datatable-interactivity1', 'selected_columns1')
